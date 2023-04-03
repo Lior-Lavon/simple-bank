@@ -1,0 +1,13 @@
+version: "2"
+sql:
+  - engine: "postgresql"
+    queries: "./query/"
+    schema: "./migration/"
+    gen:
+      go:
+        package: "db"
+        emit_json_tags: true # add json tags #
+        out: "./sqlc"
+
+
+# accounts table -> accounts struct

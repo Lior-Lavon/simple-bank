@@ -1,3 +1,35 @@
+project: https://www.youtube.com/playlist?list=PLy_6D98if3ULEtXtNSY_2qN21VCKgoQAE
+
 // create DB schema 
 https://dbdiagram.io
+
+// TablePlus to manage postgres
+
+// Database migration library
+https://github.com/golang-migrate/migrate
+> brew install golang-migrate
+> migrate -version // v4.15.2
+> create ./db/migration folders
+// Initialise the db schema 
+> migrate create -ext sql -dir db/migration -seq init_schema [migration_name]
+// -seq = sequential version number
+// init_schema = [migration_name]
+
+// create db from inside the shell 
+> createdb --username=root --owner=root simple_bank
+> dropdb simple_bank
+
+// manage DB from outside the shell using docker command
+> docker exec -it postgres12 createdb --username=root --owner=root simple_bank
+> docker exec -it postgres12 dropdb simple_bank
+
+// run migration from project folder
+> migrate -path ../db/migration -database "postgresql://root:secret@localhost:5432/simple_bank?sslmode=disable" -verbose up
+> migrate -path ../db/migration -database "postgresql://root:secret@localhost:5432/simple_bank?sslmode=disable" -verbose down
+
+// Auto generating database CRUD code using SQLC
+https://github.com/kyleconroy/sqlc
+// Installation
+> brew install sqlc
+> sqlc init
 

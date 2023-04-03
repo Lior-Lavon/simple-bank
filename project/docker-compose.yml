@@ -2,6 +2,7 @@ version: '3'
 
 services:
   postgres:
+    container_name: 'postgres12'
     image: 'postgres:12-alpine'
     ports:
       - "5432:5432"
@@ -10,8 +11,8 @@ services:
       mode: replicated
       replicas: 1
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: secret
       POSTGRES_DB: simple_bank
     volumes:
       - ./db-data/postgres/:/var/lib/postgresql/data/
