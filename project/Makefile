@@ -11,7 +11,7 @@ migratedown:
 	migrate -path ../db/migration -database "postgresql://root:secret@localhost:5432/simple_bank?sslmode=disable" -verbose down
 
 sqlc:
-	cd ../db; sqlc generate;
+	cd ../db && sqlc generate
 
 ## up: starts all containers in the background without forcing build
 up:
