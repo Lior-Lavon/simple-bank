@@ -20,9 +20,7 @@ jobs:
     # Service containers to run with `container-job`
     services:           # specifiy a list of external services
       postgres:
-        
         image: postgres:12                 # Docker Hub image
-        # Provide the password for postgres
         env:
           POSTGRES_USER: root
           POSTGRES_PASSWORD: secret
@@ -36,27 +34,23 @@ jobs:
 
     # define the steps
     steps:
-    - uses: actions/checkout@v3 # check code from the repo. to the runner
+      - uses: actions/checkout@v3 # check code from the repo. to the runner
 
-    - name: Set up Go           # install go into the runner
-      uses: actions/setup-go@v3
-      with:                     # specifiy additional params, ex: use specific version of Go
-        go-version: 1.20
-      id: go                    # Allias used to identify the step with other steps
-    
-    - name: Install Golang-Migrate
-      run: | 
-        curl -L https://github.com/golang-migrate/migrate/releases/download/v4.15.2/migrate.linux-amd64.tar.gz | tar xvz
-        sudo mv migrate /usr/bin
-        which migrate
-    
-    - name: 
-      working-directory: ./project
-      run: make createdb
+      - name: Set up Go           # install go into the runner
+        uses: actions/setup-go@v3
+        with:                     # specifiy additional params, ex: use specific version of Go
+          go-version: 1.20
+        id: go                    # Allias used to identify the step with other steps
+      
+      - name: Install Golang-Migrate
+        run: | 
+          curl -L https://github.com/golang-migrate/migrate/releases/download/v4.15.2/migrate.linux-amd64.tar.gz | tar xvz
+          sudo mv migrate /usr/bin
+          which migrate
+      
+      # - name: Run migrations
+      #   working-directory: ./project
+      #   run: make migrateup
 
-    # - name: Run migrations
-    #   working-directory: ./project
-    #   run: make migrateup
-
-    # - name: Test                # Test the code
-    #   run: make test
+      # - name: Test                # Test the code
+      #   run: make test
