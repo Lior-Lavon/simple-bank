@@ -55,5 +55,6 @@ jobs:
         working-directory: ./project
         run: migrate -path ../db/migration -database "postgresql://root:secret@localhost:5432/simple_bank?sslmode=disable" -verbose up
 
-      # - name: Test                # Test the code
-      #   run: make test
+      - name: Test                # Test the code
+        working-directory: ./project
+        run: go test -v -cover ../... 
