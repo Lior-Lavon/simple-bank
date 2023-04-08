@@ -6,7 +6,7 @@
 package db
 
 import (
-	"context"
+	"golang.org/x/net/context"
 )
 
 const addAccountBalance = `-- name: AddAccountBalance :one
