@@ -37,13 +37,15 @@ jobs:
 
     # define the steps
     steps:
-      - uses: actions/checkout@v3 # check code from the repo. to the runner
 
-      - name: Set up Go           # install go into the runner
-        uses: actions/setup-go@v3
+      - name: Set up Go 1.x       # install go into the runner
+        uses: actions/setup-go@v2
         with:                     # specifiy additional params, ex: use specific version of Go
-          go-version: 1.20
+          go-version: ^1.15
         id: go                    # Allias used to identify the step with other steps
+
+      - name: Check out the code into the Go module directory
+        uses: actions/checkout@v2 # check code from the repo. to the runner
       
       - name: Install Golang-Migrate
         run: | 
@@ -51,7 +53,7 @@ jobs:
           sudo mv migrate /usr/bin/migrate
           which migrate
       
-      - name: Run migrations
+      - name: Run migration
         working-directory: ./project
         run: make migrateup
       - name: Test
