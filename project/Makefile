@@ -13,6 +13,9 @@ migratedown:
 sqlc:
 	cd ../db && sqlc generate
 
+test:
+	go test -v -cover ../... 
+
 ## up: starts all containers in the background without forcing build
 up:
 	@echo "Starting Docker images..."
