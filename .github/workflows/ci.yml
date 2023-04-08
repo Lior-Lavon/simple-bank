@@ -50,9 +50,9 @@ jobs:
         sudo mv migrate /usr/bin
         which migrate
     
-    # - name: 
-    #   working-directory: ./project
-    #   run: make createdb
+    - name: 
+      working-directory: ./project
+      run: make createdb
 
     # - name: Run migrations
     #   working-directory: ./project
