@@ -1,0 +1,31 @@
+# This workflow will build a golang project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
+
+name: ci-test
+
+#define the events that can trigger this workflow
+on: 
+  push:
+    branches: [ "main" ] # Push to master branch
+  pull_request:
+    branches: [ "main" ] # PR accepted to master branch
+
+# define the jpbs
+jobs:
+  
+  test: # job 1
+    name: Test
+    runs-on: ubuntu-latest
+    
+    # define the steps
+    steps:
+    - uses: actions/checkout@v3 # check code from the repo. to the runner
+
+    - name: Set up Go           # install go into the runner
+      uses: actions/setup-go@v3
+      with:                     # specifiy additional params, ex: use specific version of Go
+        go-version: 1.20
+      id: go                    # Allias used to identify the step with other steps
+
+    - name: Test                # Test the code
+      run: make test

@@ -33,3 +33,26 @@ https://github.com/kyleconroy/sqlc
 > brew install sqlc
 > sqlc init
 
+// Creating tests for CRUD DB functinality
+// create main_test.go to hold all the db connection and query
+// create account_test.go for testing functionality
+// Install a PG drive from https://github.com/lib/pq using "go get github.com/lib/pq"
+
+// Use Testify package for checking the test results
+// https://github.com/stretchr/testify
+// go get github.com/stretchr/testify
+// import "github.com/stretchr/testify/require"
+
+// CI using "Github Action" with Go + postgres
+// to auto build, test and deploy
+// Define a Workflow built from several Jobs
+// The Workflow can be triggered by one of 3 (Change to repository on Github, Schedule , or button click)
+// Creating a Workflow in .github/workflows/ci.yml file on the repository main folder
+// Jobs are defined by a Runner (server that listen for available jobs)
+// The Runner will execute the job and push the report to a log hosted by Github
+// A Job is a set of steps that will be executed inside a Runner
+// Steps are actions inside a Job and run serially 
+// A Step can contain several actions
+// Action is single command
+
+
