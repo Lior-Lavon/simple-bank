@@ -51,6 +51,7 @@ jobs:
         which migrate
 
     - name: Run migrations
+      working-directory: ./project
       run: make migrateup
 
     - name: Test                # Test the code
