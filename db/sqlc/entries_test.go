@@ -67,7 +67,7 @@ func TestGetEntry(t *testing.T) {
 	assert.NotZero(t, entry2.ID)
 	assert.Equal(t, entry1.AccountID, entry2.AccountID)
 	assert.Equal(t, entry1.Amount, entry2.Amount)
-	assert.WithinDuration(t, entry1.CreatedAt.Time, entry2.CreatedAt.Time, time.Second)
+	assert.WithinDuration(t, entry1.CreatedAt, entry2.CreatedAt, time.Second)
 
 	deleteRandomEntry(t, entry2)
 }
@@ -127,7 +127,7 @@ func TestUpdateEntry(t *testing.T) {
 	assert.Equal(t, ent1.ID, ent2.ID)
 	assert.Equal(t, ent1.AccountID, ent2.AccountID)
 	assert.Equal(t, arg.Amount, ent2.Amount)
-	assert.WithinDuration(t, ent1.CreatedAt.Time, ent2.CreatedAt.Time, time.Second)
+	assert.WithinDuration(t, ent1.CreatedAt, ent2.CreatedAt, time.Second)
 
 	// clear resources
 	deleteRandomEntry(t, ent1)

@@ -53,7 +53,7 @@ func TestGetOwner(t *testing.T) {
 	assert.Equal(t, o.Firstname, owner.Firstname)
 	assert.Equal(t, o.Lastname, owner.Lastname)
 	assert.Equal(t, o.Email, owner.Email)
-	assert.WithinDuration(t, o.CreatedAt.Time, owner.CreatedAt.Time, time.Second)
+	assert.WithinDuration(t, o.CreatedAt, owner.CreatedAt, time.Second)
 
 	testQueriers.DeleteOwner(context.Background(), o.ID)
 }
@@ -77,7 +77,7 @@ func TestUpdateOwner(t *testing.T) {
 	assert.Equal(t, arg.Firstname, owner.Firstname)
 	assert.Equal(t, arg.Lastname, owner.Lastname)
 	assert.Equal(t, arg.Email, owner.Email)
-	assert.WithinDuration(t, o.CreatedAt.Time, owner.CreatedAt.Time, time.Second)
+	assert.WithinDuration(t, o.CreatedAt, owner.CreatedAt, time.Second)
 
 	testQueriers.DeleteOwner(context.Background(), o.ID)
 }
