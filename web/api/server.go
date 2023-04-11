@@ -22,7 +22,9 @@ func NewServer(store *db.Store) *Server {
 	// define routes to the router
 	server.router.POST("/api/v1/owners", server.createOwner)
 	server.router.GET("/api/v1/owners/:id", server.getOwner)
-	// server.router.GET("/api/v1/owners", server.listOwners)
+	server.router.GET("/api/v1/owners", server.listOwners)
+	server.router.PUT("/api/v1/owners/:id", server.updateOwner)
+	server.router.DELETE("/api/v1/owners/:id", server.deleteOwner)
 
 	return server
 }
