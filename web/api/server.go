@@ -19,12 +19,33 @@ func NewServer(store *db.Store) *Server {
 		router: gin.Default(),
 	}
 
-	// define routes to the router
+	// owners routing
 	server.router.POST("/api/v1/owners", server.createOwner)
 	server.router.GET("/api/v1/owners/:id", server.getOwner)
 	server.router.GET("/api/v1/owners", server.listOwners)
 	server.router.PUT("/api/v1/owners/:id", server.updateOwner)
 	server.router.DELETE("/api/v1/owners/:id", server.deleteOwner)
+
+	// accounts routing
+	server.router.POST("/api/v1/accounts", server.createAccount)
+	server.router.GET("/api/v1/accounts/:id", server.getAccount)
+	server.router.GET("/api/v1/accounts", server.listAccounts)
+	server.router.PUT("/api/v1/accounts/:id", server.updateAccount)
+	server.router.DELETE("/api/v1/accounts/:id", server.deleteAccount)
+
+	// Entries routing
+	server.router.POST("/api/v1/entries", server.createEntry)
+	server.router.GET("/api/v1/entries/:id", server.getEntry)
+	server.router.GET("/api/v1/entries", server.listEntries)
+	server.router.PUT("/api/v1/entries/:id", server.updateEntry)
+	server.router.DELETE("/api/v1/entries/:id", server.deleteEntry)
+
+	// Transfers routing
+	server.router.POST("/api/v1/transfers", server.createTransfer)
+	server.router.GET("/api/v1/transfers/:id", server.getTransfer)
+	server.router.GET("/api/v1/transfers", server.listTransfers)
+	server.router.PUT("/api/v1/transfers/:id", server.updateTransfer)
+	server.router.DELETE("/api/v1/transfers/:id", server.deleteTransfer)
 
 	return server
 }

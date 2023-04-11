@@ -15,7 +15,6 @@ func TestTransferTx(t *testing.T) {
 	// create two random accounts
 	acc1 := createRandomAccount(t)
 	acc2 := createRandomAccount(t)
-	//fmt.Println(">> before : ", acc1.Balance, acc2.Balance)
 
 	// to test the concurency, run in several go routies
 	n := 5              // 5 transactions
@@ -107,8 +106,6 @@ func TestTransferTx(t *testing.T) {
 		require.Equal(t, acc2.Currency, toAccount.Currency)
 		require.NotZero(t, toAccount.CreatedAt)
 
-		fmt.Println(">> tx : ", fromAccount.Balance, toAccount.Balance)
-
 		diff1 := acc1.Balance - fromAccount.Balance
 		diff2 := toAccount.Balance - acc2.Balance
 		require.Equal(t, diff1, diff2)
@@ -125,8 +122,6 @@ func TestTransferTx(t *testing.T) {
 	updatedAccoun2, err := testQueriers.GetAccount(context.Background(), acc2.ID)
 	require.NoError(t, err)
 
-	fmt.Println(">> after : ", updatedAccoun1.Balance, updatedAccoun2.Balance)
-
 	require.Equal(t, acc1.Balance-int64(n)*amount, updatedAccoun1.Balance)
 	require.Equal(t, acc2.Balance+int64(n)*amount, updatedAccoun2.Balance)
 
@@ -139,7 +134,6 @@ func TestTransferTxDeadLock(t *testing.T) {
 	// create two random accounts
 	acc1 := createRandomAccount(t)
 	acc2 := createRandomAccount(t)
-	fmt.Println(">> before : ", acc1.Balance, acc2.Balance)
 
 	// to test the concurency, run in several go routies
 	n := 10             // 5 transactions
@@ -191,8 +185,6 @@ func TestTransferTxDeadLock(t *testing.T) {
 
 	updatedAccoun2, err := testQueriers.GetAccount(context.Background(), acc2.ID)
 	require.NoError(t, err)
-
-	fmt.Println(">> after : ", updatedAccoun1.Balance, updatedAccoun2.Balance)
 
 	require.Equal(t, acc1.Balance, updatedAccoun1.Balance)
 	require.Equal(t, acc2.Balance, updatedAccoun2.Balance)
