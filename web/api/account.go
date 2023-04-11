@@ -2,6 +2,7 @@ package api
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -71,7 +72,15 @@ func (s *Server) getAccount(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, account)
+	owner, err := s.store.GetOwner(ctx, account.OwnerID)
+	if err != nil {
+		ctx.JSON(http.StatusBadGateway, errorResponse(err))
+		return
+	}
+
+	res := accountToMap(account, owner)
+
+	ctx.JSON(http.StatusOK, res)
 }
 
 func (s *Server) listAccounts(ctx *gin.Context) {
@@ -96,7 +105,19 @@ func (s *Server) listAccounts(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, accounts)
+	var res []map[string]any
+	for _, acc := range accounts {
+		owner, err := s.store.GetOwner(ctx, acc.OwnerID)
+		if err != nil {
+			ctx.JSON(http.StatusBadGateway, errorResponse(err))
+			return
+		}
+
+		extAcc := accountToMap(acc, owner)
+		res = append(res, extAcc)
+	}
+
+	ctx.JSON(http.StatusOK, res)
 }
 
 func (s *Server) updateAccount(ctx *gin.Context) {
@@ -160,4 +181,13 @@ func (s *Server) deleteAccount(ctx *gin.Context) {
 		"response": fmt.Sprintf("account %d deleted", request.ID),
 	}
 	ctx.JSON(http.StatusOK, res)
+}
+
+func accountToMap(account db.Account, owner db.Owner) (res map[string]any) {
+
+	data, _ := json.Marshal(account)
+	json.Unmarshal(data, &res)
+	res["owner"] = owner
+
+	return
 }
