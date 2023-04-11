@@ -10,15 +10,13 @@ import (
 	db "github.com/liorlavon/simplebank/db/sqlc"
 )
 
-type createOwnerRequest struct {
-	Firstname string `json:"firstname" binding:"required"`
-	Lastname  string `json:"lastname" binding:"required"`
-	Email     string `json:"email" binding:"required"`
-	// binding:"required,oneof=USD EUR"`
-}
-
 func (s *Server) createOwner(ctx *gin.Context) {
-	var request createOwnerRequest
+	var request struct {
+		Firstname string `json:"firstname" binding:"required"`
+		Lastname  string `json:"lastname" binding:"required"`
+		Email     string `json:"email" binding:"required"`
+	}
+
 	err := ctx.ShouldBindJSON(&request)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
@@ -40,13 +38,12 @@ func (s *Server) createOwner(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, owner)
 }
 
-type getOwnerRequest struct {
-	ID int64 `uri:"id" binding:"required,min=1"`
-}
-
 func (s *Server) getOwner(ctx *gin.Context) {
 
-	var request getOwnerRequest
+	var request struct {
+		ID int64 `uri:"id" binding:"required,min=1"`
+	}
+
 	err := ctx.ShouldBindUri(&request)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
@@ -66,14 +63,13 @@ func (s *Server) getOwner(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, o)
 }
 
-type listOwnerRequest struct {
-	PageId   int32 `form:"page_id" binding:"required,min=1"`
-	PageSize int32 `form:"page_size" binding:"required,min=1,max=10"`
-}
-
 func (s *Server) listOwners(ctx *gin.Context) {
 
-	var request listOwnerRequest
+	var request struct {
+		PageId   int32 `form:"page_id" binding:"required,min=1"`
+		PageSize int32 `form:"page_size" binding:"required,min=1,max=10"`
+	}
+
 	err := ctx.ShouldBindQuery(&request)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
@@ -93,26 +89,22 @@ func (s *Server) listOwners(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, list)
 }
 
-type updateOwnerId struct {
-	ID int64 `uri:"id" binding:"required,min=1"`
-}
-
-type updateOwnerRequest struct {
-	ID        int64  `json:"id"`
-	Firstname string `json:"firstname" binding:"required"`
-	Lastname  string `json:"lastname" binding:"required"`
-	Email     string `json:"email" binding:"required"`
-}
-
 func (s *Server) updateOwner(ctx *gin.Context) {
-	var request updateOwnerId
+	var request struct {
+		ID int64 `uri:"id" binding:"required,min=1"`
+	}
 	err := ctx.ShouldBindUri(&request)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
-	var body updateOwnerRequest
+	var body struct {
+		ID        int64  `json:"id"`
+		Firstname string `json:"firstname" binding:"required"`
+		Lastname  string `json:"lastname" binding:"required"`
+		Email     string `json:"email" binding:"required"`
+	}
 	err = ctx.ShouldBindJSON(&body)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
@@ -140,12 +132,10 @@ func (s *Server) updateOwner(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, owner)
 }
 
-type deleteOwnerParam struct {
-	ID int64 `uri:"id" binding:"required,min=1"`
-}
-
 func (s *Server) deleteOwner(ctx *gin.Context) {
-	var request deleteOwnerParam
+	var request struct {
+		ID int64 `uri:"id" binding:"required,min=1"`
+	}
 	err := ctx.ShouldBindUri(&request)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
