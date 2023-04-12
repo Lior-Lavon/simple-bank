@@ -1,7 +1,9 @@
 package api
 
 import (
+	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -59,6 +61,16 @@ func (s *Server) getEntry(ctx *gin.Context) {
 		return
 	}
 
+	// check for extend uri
+	var extends struct {
+		Extends bool `form:"extends"`
+	}
+	err = ctx.ShouldBindQuery(&extends)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
 	entry, err := s.store.GetEntry(ctx, request.ID)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -69,13 +81,27 @@ func (s *Server) getEntry(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, entry)
+	var res any
+	if extends.Extends {
+		e, err := prepareEntryResponse(s, ctx, entry)
+		if err != nil {
+			ctx.JSON(http.StatusBadGateway, errorResponse(err))
+			return
+		}
+		res = e
+	} else {
+		res = entry
+	}
+
+	ctx.JSON(http.StatusOK, res)
 }
 
 func (s *Server) listEntries(ctx *gin.Context) {
 	var request struct {
-		PageId   int32 `form:"page_id" binding:"required,min=1"`
-		PageSize int32 `form:"page_size" binding:"required,min=1,max=10"`
+		AccountID int64 `form:"account_id" binding:"required,min=1"`
+		PageId    int32 `form:"page_id" binding:"required,min=1"`
+		PageSize  int32 `form:"page_size" binding:"required,min=1,max=10"`
+		Extends   bool  `form:"extends"`
 	}
 
 	err := ctx.ShouldBindQuery(&request)
@@ -84,17 +110,34 @@ func (s *Server) listEntries(ctx *gin.Context) {
 		return
 	}
 
-	arg := db.ListAccountsParams{
-		Limit:  int32(request.PageSize),
-		Offset: int32((request.PageId - 1) * request.PageSize),
+	arg := db.ListEntriesParams{
+		AccountID: request.AccountID,
+		Limit:     int32(request.PageSize),
+		Offset:    int32((request.PageId - 1) * request.PageSize),
 	}
-	entries, err := s.store.ListAccounts(ctx, arg)
+	entries, err := s.store.ListEntries(ctx, arg)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, entries)
+	var res any
+	if request.Extends {
+		var arr []map[string]any
+		for _, acc := range entries {
+			extAcc, err := prepareEntryResponse(s, ctx, acc)
+			if err != nil {
+				ctx.JSON(http.StatusBadGateway, errorResponse(err))
+				return
+			}
+			arr = append(arr, extAcc)
+		}
+		res = arr
+	} else {
+		res = entries
+	}
+
+	ctx.JSON(http.StatusOK, res)
 }
 
 func (s *Server) updateEntry(ctx *gin.Context) {
@@ -159,4 +202,19 @@ func (s *Server) deleteEntry(ctx *gin.Context) {
 		"response": fmt.Sprintf("entry %d deleted", request.ID),
 	}
 	ctx.JSON(http.StatusOK, res)
+}
+
+func prepareEntryResponse(s *Server, ctx context.Context, entry db.Entry) (res map[string]any, err error) {
+
+	account, err := s.store.GetAccount(ctx, entry.AccountID)
+	if err != nil {
+		return
+	}
+
+	data, _ := json.Marshal(entry)
+	json.Unmarshal(data, &res)
+	res["account"] = account
+
+	delete(res, "account_id")
+	return
 }

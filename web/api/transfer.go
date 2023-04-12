@@ -1,7 +1,9 @@
 package api
 
 import (
+	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -73,7 +75,17 @@ func (s *Server) getTransfer(ctx *gin.Context) {
 		return
 	}
 
-	entry, err := s.store.GetTransfer(ctx, request.ID)
+	// check for extend uri
+	var extends struct {
+		Extends bool `form:"extends"`
+	}
+	err = ctx.ShouldBindQuery(&extends)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	transfer, err := s.store.GetTransfer(ctx, request.ID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
@@ -83,7 +95,19 @@ func (s *Server) getTransfer(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, entry)
+	var res any
+	if extends.Extends {
+		t, err := prepareTransferResponse(s, ctx, transfer)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, errorResponse(err))
+			return
+		}
+		res = t
+	} else {
+		res = transfer
+	}
+
+	ctx.JSON(http.StatusOK, res)
 }
 
 func (s *Server) listTransfers(ctx *gin.Context) {
@@ -91,6 +115,7 @@ func (s *Server) listTransfers(ctx *gin.Context) {
 		FromAccountID int64 `form:"from_account_id" binding:"required"`
 		PageId        int32 `form:"page_id" binding:"required,min=1"`
 		PageSize      int32 `form:"page_size" binding:"required,min=1,max=10"`
+		Extends       bool  `form:"extends"`
 	}
 
 	err := ctx.ShouldBindQuery(&request)
@@ -104,13 +129,31 @@ func (s *Server) listTransfers(ctx *gin.Context) {
 		Limit:         int32(request.PageSize),
 		Offset:        int32((request.PageId - 1) * request.PageSize),
 	}
-	entries, err := s.store.ListTransfersFrom(ctx, arg)
+	transfers, err := s.store.ListTransfersFrom(ctx, arg)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, entries)
+	var res any
+
+	if request.Extends {
+		var arr []map[string]any
+		for _, e := range transfers {
+			resT, err := prepareTransferResponse(s, ctx, e)
+			if err != nil {
+				ctx.JSON(http.StatusBadGateway, errorResponse(err))
+				return
+			}
+
+			arr = append(arr, resT)
+		}
+		res = arr
+	} else {
+		res = transfers
+	}
+
+	ctx.JSON(http.StatusOK, res)
 }
 
 func (s *Server) updateTransfer(ctx *gin.Context) {
@@ -175,4 +218,27 @@ func (s *Server) deleteTransfer(ctx *gin.Context) {
 		"response": fmt.Sprintf("transfer %d deleted", request.ID),
 	}
 	ctx.JSON(http.StatusOK, res)
+}
+
+func prepareTransferResponse(s *Server, ctx context.Context, transfer db.Transfer) (res map[string]any, err error) {
+
+	fromAccount, err := s.store.GetAccount(ctx, transfer.FromAccountID)
+	if err != nil {
+		return
+	}
+
+	toAccount, err := s.store.GetAccount(ctx, transfer.ToAccountID)
+	if err != nil {
+		return
+	}
+
+	data, _ := json.Marshal(transfer)
+	json.Unmarshal(data, &res)
+	res["from_account"] = fromAccount
+	res["to_account"] = toAccount
+
+	delete(res, "from_account_id")
+	delete(res, "to_account_id")
+
+	return
 }

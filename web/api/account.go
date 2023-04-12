@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"errors"
@@ -62,6 +63,16 @@ func (s *Server) getAccount(ctx *gin.Context) {
 		return
 	}
 
+	// check for extend uri
+	var extends struct {
+		Extends bool `form:"extends"`
+	}
+	err = ctx.ShouldBindQuery(&extends)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
 	account, err := s.store.GetAccount(ctx, request.ID)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -72,13 +83,16 @@ func (s *Server) getAccount(ctx *gin.Context) {
 		return
 	}
 
-	owner, err := s.store.GetOwner(ctx, account.OwnerID)
-	if err != nil {
-		ctx.JSON(http.StatusBadGateway, errorResponse(err))
-		return
+	var res any
+	if extends.Extends {
+		res, err = prepareAccountResponse(s, ctx, account)
+		if err != nil {
+			ctx.JSON(http.StatusBadGateway, errorResponse(err))
+			return
+		}
+	} else {
+		res = account
 	}
-
-	res := accountToMap(account, owner)
 
 	ctx.JSON(http.StatusOK, res)
 }
@@ -87,6 +101,7 @@ func (s *Server) listAccounts(ctx *gin.Context) {
 	var request struct {
 		PageId   int32 `form:"page_id" binding:"required,min=1"`
 		PageSize int32 `form:"page_size" binding:"required,min=1,max=10"`
+		Extends  bool  `form:"extends"`
 	}
 
 	err := ctx.ShouldBindQuery(&request)
@@ -105,16 +120,21 @@ func (s *Server) listAccounts(ctx *gin.Context) {
 		return
 	}
 
-	var res []map[string]any
-	for _, acc := range accounts {
-		owner, err := s.store.GetOwner(ctx, acc.OwnerID)
-		if err != nil {
-			ctx.JSON(http.StatusBadGateway, errorResponse(err))
-			return
-		}
+	var res any
+	if request.Extends {
+		arr := []map[string]any{}
+		for _, acc := range accounts {
+			extAcc, err := prepareAccountResponse(s, ctx, acc)
+			if err != nil {
+				ctx.JSON(http.StatusBadGateway, errorResponse(err))
+				return
+			}
 
-		extAcc := accountToMap(acc, owner)
-		res = append(res, extAcc)
+			arr = append(arr, extAcc)
+		}
+		res = arr
+	} else {
+		res = accounts
 	}
 
 	ctx.JSON(http.StatusOK, res)
@@ -183,11 +203,17 @@ func (s *Server) deleteAccount(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
-func accountToMap(account db.Account, owner db.Owner) (res map[string]any) {
+func prepareAccountResponse(s *Server, ctx context.Context, account db.Account) (res map[string]any, err error) {
+
+	owner, err := s.store.GetOwner(ctx, account.OwnerID)
+	if err != nil {
+		return
+	}
 
 	data, _ := json.Marshal(account)
 	json.Unmarshal(data, &res)
 	res["owner"] = owner
 
+	delete(res, "owner_id")
 	return
 }
