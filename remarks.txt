@@ -57,12 +57,13 @@ https://github.com/kyleconroy/sqlc
 
 // Web Server : Gin
 
-// Viper : Load config from file & ENV variables
+// Viper
+// Read config from file or ENV variables
+// Repo : https://github.com/spf13/viper
+// Install : go get github.com/spf13/viper
 // File - config for local developement and testing
 // Ev. variables - config for docker production
 // Usage : DB configuration in main_test.go and main.go files 
-// Repo : https://github.com/spf13/viper
-// Install : go get github.com/spf13/viper
 // Create a file in root 'app.env' to store config values for developement
 // copy the db variables from main.go
 // configure Viper to load the app.env file -> create a file config.go in ./utill
