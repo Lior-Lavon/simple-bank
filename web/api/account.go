@@ -200,6 +200,7 @@ func (s *Server) deleteAccount(ctx *gin.Context) {
 	res := map[string]string{
 		"response": fmt.Sprintf("account %d deleted", request.ID),
 	}
+
 	ctx.JSON(http.StatusOK, res)
 }
 
