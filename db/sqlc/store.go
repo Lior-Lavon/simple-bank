@@ -6,15 +6,20 @@ import (
 	"fmt"
 )
 
-// Will provide all functions to execute db queries as One transaction
-// combine individual queries under Store struct to support
-type Store struct {
+// store provides all functions to ensure DB queries and transaction
+type Store interface {
+	Querier
+	TransferTx(ctx context.Context, arg TransferTxParams) (TransferTxResult, error)
+}
+
+// REAL store provides all functions to ensure DB queries and transaction
+type SQL_Store struct {
 	*Queries
 	db *sql.DB
 }
 
-func NewStore(db *sql.DB) *Store {
-	return &Store{
+func NewStore(db *sql.DB) Store {
+	return &SQL_Store{
 		db:      db,
 		Queries: New(db),
 	}
@@ -22,7 +27,7 @@ func NewStore(db *sql.DB) *Store {
 
 // Create and run a new database transaction
 // execTx execute a function within a database transaction
-func (store *Store) execTx(ctx context.Context, fn func(*Queries) error) error {
+func (store *SQL_Store) execTx(ctx context.Context, fn func(*Queries) error) error {
 	tx, err := store.db.BeginTx(ctx, nil)
 	if err != nil {
 		return nil
@@ -66,7 +71,7 @@ var txKey = struct{}{}
 // - add two ccount entries
 // - update account balance
 // with in a single DB transaction
-func (store *Store) TransferTx(ctx context.Context, arg TransferTxParams) (TransferTxResult, error) {
+func (store *SQL_Store) TransferTx(ctx context.Context, arg TransferTxParams) (TransferTxResult, error) {
 	var result TransferTxResult
 
 	err := store.execTx(ctx, func(q *Queries) error {
