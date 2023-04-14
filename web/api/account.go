@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 
@@ -36,6 +35,7 @@ func (s *Server) createAccount(ctx *gin.Context) {
 			return
 		}
 		ctx.JSON(http.StatusBadGateway, errorResponse(err))
+		return
 	}
 
 	arg := db.CreateAccountParams{
@@ -79,7 +79,7 @@ func (s *Server) getAccount(ctx *gin.Context) {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
 			return
 		}
-		ctx.JSON(http.StatusBadGateway, errorResponse(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
@@ -114,9 +114,10 @@ func (s *Server) listAccounts(ctx *gin.Context) {
 		Limit:  int32(request.PageSize),
 		Offset: int32((request.PageId - 1) * request.PageSize),
 	}
+
 	accounts, err := s.store.ListAccounts(ctx, arg)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		ctx.JSON(http.StatusBadGateway, errorResponse(err))
 		return
 	}
 
@@ -152,7 +153,7 @@ func (s *Server) updateAccount(ctx *gin.Context) {
 	}
 
 	var body struct {
-		ID      int64 `json:"id"`
+		ID      int64 `json:"id" binding:"required,min=1"`
 		Balance int64 `json:"balance" binding:"required"`
 	}
 	err = ctx.ShouldBindJSON(&body)
@@ -162,7 +163,8 @@ func (s *Server) updateAccount(ctx *gin.Context) {
 	}
 
 	if request.ID != body.ID {
-		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("id does not match")))
+		err := fmt.Errorf("id %d does not match", request.ID)
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
@@ -178,7 +180,6 @@ func (s *Server) updateAccount(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, account)
-
 }
 
 func (s *Server) deleteAccount(ctx *gin.Context) {
@@ -200,6 +201,7 @@ func (s *Server) deleteAccount(ctx *gin.Context) {
 	res := map[string]string{
 		"response": fmt.Sprintf("account %d deleted", request.ID),
 	}
+
 	ctx.JSON(http.StatusOK, res)
 }
 

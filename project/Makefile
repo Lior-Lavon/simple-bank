@@ -19,6 +19,9 @@ test:
 server:
 	cd ../ && go run main.go
 
+mock:
+	cd ../ && mockgen -package mockdb -destination db/mock/store.go github.com/liorlavon/simplebank/db/sqlc Store 
+
 ## up: starts all containers in the background without forcing build
 up:
 	@echo "Starting Docker images..."

@@ -68,3 +68,16 @@ https://github.com/kyleconroy/sqlc
 // copy the db variables from main.go
 // configure Viper to load the app.env file -> create a file config.go in ./utill
 // Init the LoadConfig in main.go
+
+// Http testing using Mock-DB
+// https://github.com/golang/mock
+// Install GoMock : go get github.com/golang/mock/mockgen@v1.6.0
+>  ls -l ~/go/bin
+>  which mockgen -> result with 'mockgen not found' becouse 
+// create  new folder in db/mock
+// check 'mockgen help' and choose 'Reflect mode'
+// mockgen [package-name] [path-to-generated-output] [path-to-store-interface] [interface-name] 
+> mockgen -package mockdb -destination db/mock/store.go github.com/liorlavon/simplebank/db/sqlc Store 
+// find the generated file in db/mock/store.go
+Now we can start writing tests for the API
+// create a account_test.go in the api folder
