@@ -50,3 +50,8 @@ func RandomCurrency() string {
 	currencies := []string{"EUR", "USD", "CAD"}
 	return currencies[rand.Intn(len(currencies))]
 }
+
+func GetTime() time.Time {
+	return time.Date(
+		2009, 11, 17, 20, 34, 58, 651387237, time.UTC)
+}
