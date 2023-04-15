@@ -81,3 +81,6 @@ https://github.com/kyleconroy/sqlc
 // find the generated file in db/mock/store.go
 Now we can start writing tests for the API
 // create a account_test.go in the api folder
+
+Custom Param Validator
+
