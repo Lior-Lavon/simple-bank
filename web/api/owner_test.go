@@ -13,13 +13,12 @@ import (
 	"github.com/golang/mock/gomock"
 	mockdb "github.com/liorlavon/simplebank/db/mock"
 	db "github.com/liorlavon/simplebank/db/sqlc"
-	"github.com/liorlavon/simplebank/util"
 	"github.com/stretchr/testify/require"
 )
 
 func TestCreateOwner(t *testing.T) {
 
-	o := createRandomOwner()
+	o := randomOwner()
 
 	// create new mock
 	ctrl := gomock.NewController(t)
@@ -135,7 +134,7 @@ func TestCreateOwner(t *testing.T) {
 
 func TestGetOwner(t *testing.T) {
 
-	o := createRandomOwner()
+	o := randomOwner()
 
 	// create new mock
 	ctrl := gomock.NewController(t)
@@ -343,38 +342,40 @@ func TestListOwners(t *testing.T) {
 	}
 }
 
-func TestUpdateAccount(t *testing.T) {
-	// create random account
-	account := randomAccount()
-	// create updated account
-	updatedAccount := db.Account(account)
-	updatedAccount.Balance += 50
+func TestUpdateOwner(t *testing.T) {
+	// create random owner
+	owner := randomOwner()
+	// create updated owner
+	updatedOwner := db.Owner(owner)
+	updatedOwner.Firstname += "HHH"
 
 	// define a list of test cases
 	testCases := []struct {
 		name          string // uniqe test name
 		url           func(id int32) string
-		accountParam  func() db.UpdateAccountParams
-		buildStub     func(store *mockdb.MockStore, arg db.UpdateAccountParams) // the getAccount stub for each test will be build differently
-		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)   // define a function that will check the output of the API
+		ownerParam    func() db.UpdateOwnerParams
+		buildStub     func(store *mockdb.MockStore, arg db.UpdateOwnerParams) // the getAccount stub for each test will be build differently
+		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder) // define a function that will check the output of the API
 	}{
 		{
 			name: "OK",
 			url: func(id int32) string {
-				return fmt.Sprintf("/api/v1/accounts/%d", id)
+				return fmt.Sprintf("/api/v1/owners/%d", id)
 			},
-			accountParam: func() db.UpdateAccountParams {
-				return db.UpdateAccountParams{
-					ID:      account.ID,
-					Balance: updatedAccount.Balance,
+			ownerParam: func() db.UpdateOwnerParams {
+				return db.UpdateOwnerParams{
+					ID:        owner.ID,
+					Firstname: owner.Firstname,
+					Lastname:  owner.Lastname,
+					Email:     owner.Email,
 				}
 			},
-			buildStub: func(store *mockdb.MockStore, arg db.UpdateAccountParams) {
+			buildStub: func(store *mockdb.MockStore, arg db.UpdateOwnerParams) {
 				gomock.InOrder(
 					store.EXPECT().
-						UpdateAccount(gomock.Any(), gomock.Eq(arg)).
+						UpdateOwner(gomock.Any(), gomock.Eq(arg)).
 						Times(1).
-						Return(updatedAccount, nil),
+						Return(updatedOwner, nil),
 				)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
@@ -382,25 +383,27 @@ func TestUpdateAccount(t *testing.T) {
 				require.Equal(t, http.StatusOK, recorder.Code)
 
 				// check the response Body account response
-				requierBodyMatchAccount(t, recorder.Body, updatedAccount)
+				requierBodyMatchOwner(t, recorder.Body, updatedOwner)
 			},
 		},
 		{
 			name: "Validation",
 			url: func(id int32) string {
 				id = 0
-				return fmt.Sprintf("/api/v1/accounts/%d", id)
+				return fmt.Sprintf("/api/v1/owners/%d", id)
 			},
-			accountParam: func() db.UpdateAccountParams {
-				return db.UpdateAccountParams{
-					ID:      account.ID,
-					Balance: updatedAccount.Balance,
+			ownerParam: func() db.UpdateOwnerParams {
+				return db.UpdateOwnerParams{
+					ID:        owner.ID,
+					Firstname: owner.Firstname,
+					Lastname:  owner.Lastname,
+					Email:     owner.Email,
 				}
 			},
-			buildStub: func(store *mockdb.MockStore, arg db.UpdateAccountParams) {
+			buildStub: func(store *mockdb.MockStore, arg db.UpdateOwnerParams) {
 				gomock.InOrder(
 					store.EXPECT().
-						UpdateAccount(gomock.Any(), gomock.Eq(arg)).
+						UpdateOwner(gomock.Any(), gomock.Eq(arg)).
 						Times(0),
 				)
 			},
@@ -412,19 +415,17 @@ func TestUpdateAccount(t *testing.T) {
 		{
 			name: "BindError",
 			url: func(id int32) string {
-				return fmt.Sprintf("/api/v1/accounts/%d", id)
+				return fmt.Sprintf("/api/v1/owners/%d", id)
 			},
-			accountParam: func() db.UpdateAccountParams {
-				return db.UpdateAccountParams{
-					ID: account.ID,
+			ownerParam: func() db.UpdateOwnerParams {
+				return db.UpdateOwnerParams{
+					ID: owner.ID,
 				}
 			},
-			buildStub: func(store *mockdb.MockStore, arg db.UpdateAccountParams) {
-				gomock.InOrder(
-					store.EXPECT().
-						UpdateAccount(gomock.Any(), gomock.Eq(arg)).
-						Times(0),
-				)
+			buildStub: func(store *mockdb.MockStore, arg db.UpdateOwnerParams) {
+				store.EXPECT().
+					UpdateOwner(gomock.Any(), gomock.Eq(arg)).
+					Times(0)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				// check statusCode response
@@ -432,49 +433,24 @@ func TestUpdateAccount(t *testing.T) {
 			},
 		},
 		{
-			name: "IdNoMatch",
+			name: "UpdateOwnerError",
 			url: func(id int32) string {
-				id = 500
-				return fmt.Sprintf("/api/v1/accounts/%d", id)
+				return fmt.Sprintf("/api/v1/owners/%d", id)
 			},
-			accountParam: func() db.UpdateAccountParams {
-				return db.UpdateAccountParams{
-					ID:      account.ID,
-					Balance: updatedAccount.Balance,
+			ownerParam: func() db.UpdateOwnerParams {
+				return db.UpdateOwnerParams{
+					ID:        owner.ID,
+					Firstname: owner.Firstname,
+					Lastname:  owner.Lastname,
+					Email:     owner.Email,
 				}
 			},
-			buildStub: func(store *mockdb.MockStore, arg db.UpdateAccountParams) {
+			buildStub: func(store *mockdb.MockStore, arg db.UpdateOwnerParams) {
 				gomock.InOrder(
 					store.EXPECT().
-						UpdateAccount(gomock.Any(), gomock.Eq(arg)).
-						Times(0),
-				)
-			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				// check statusCode response
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
-
-				// check the response Body account response
-				requierBodyMatchIDNotMatch(t, recorder.Body, 500)
-			},
-		},
-		{
-			name: "UpdateAccountError",
-			url: func(id int32) string {
-				return fmt.Sprintf("/api/v1/accounts/%d", id)
-			},
-			accountParam: func() db.UpdateAccountParams {
-				return db.UpdateAccountParams{
-					ID:      account.ID,
-					Balance: updatedAccount.Balance,
-				}
-			},
-			buildStub: func(store *mockdb.MockStore, arg db.UpdateAccountParams) {
-				gomock.InOrder(
-					store.EXPECT().
-						UpdateAccount(gomock.Any(), gomock.Eq(arg)).
+						UpdateOwner(gomock.Any(), gomock.Eq(arg)).
 						Times(1).
-						Return(db.Account{}, sql.ErrConnDone),
+						Return(db.Owner{}, sql.ErrConnDone),
 				)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
@@ -495,7 +471,7 @@ func TestUpdateAccount(t *testing.T) {
 			// create a new mockDB store
 			mStore := mockdb.NewMockStore(ctrl)
 
-			uap := tc.accountParam()
+			uap := tc.ownerParam()
 			tc.buildStub(mStore, uap)
 
 			// start http server and send http request
@@ -519,43 +495,42 @@ func TestUpdateAccount(t *testing.T) {
 	}
 }
 
-func TestDeleteAccount(t *testing.T) {
-	// create random account
-	account := randomAccount()
+func TestDeleteOwner(t *testing.T) {
+	// create random owner
+	owner := randomOwner()
 
 	// define a list of test cases
 	testCases := []struct {
 		name          string                                                  // uniqe test name
-		accountID     int64                                                   //  accountID that we want to get
+		ownerID       int64                                                   //  accountID that we want to get
 		buildStub     func(store *mockdb.MockStore)                           // the getAccount stub for each test will be build differently
 		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder) // define a function that will check the output of the API
 	}{
 		{
-			name:      "OK",
-			accountID: account.ID,
+			name:    "OK",
+			ownerID: owner.ID,
 			buildStub: func(store *mockdb.MockStore) {
 				// build stub
 				store.EXPECT().
-					DeleteAccount(gomock.Any(), gomock.Eq(account.ID)).
+					DeleteOwner(gomock.Any(), gomock.Eq(owner.ID)).
 					Times(1).
 					Return(nil)
-
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				// check statusCode response
 				require.Equal(t, http.StatusOK, recorder.Code)
 
 				// check the response Body account response
-				requierBodyMatchResponse(t, recorder.Body, account.ID)
+				requierBodyMatchDeleteOwnerResponse(t, recorder.Body, owner.ID)
 			},
 		},
 		{
-			name:      "BadRequest",
-			accountID: 0,
+			name:    "BadRequest",
+			ownerID: 0,
 			buildStub: func(store *mockdb.MockStore) {
 				// build stub
 				store.EXPECT().
-					DeleteAccount(gomock.Any(), gomock.Eq(account.ID)).
+					DeleteOwner(gomock.Any(), gomock.Eq(owner.ID)).
 					Times(0)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
@@ -564,12 +539,12 @@ func TestDeleteAccount(t *testing.T) {
 			},
 		},
 		{
-			name:      "InvalidID",
-			accountID: account.ID,
+			name:    "InvalidID",
+			ownerID: owner.ID,
 			buildStub: func(store *mockdb.MockStore) {
 				// build stub
 				store.EXPECT().
-					DeleteAccount(gomock.Any(), gomock.Eq(account.ID)).
+					DeleteOwner(gomock.Any(), gomock.Eq(owner.ID)).
 					Times(1).
 					Return(sql.ErrNoRows)
 			},
@@ -597,7 +572,7 @@ func TestDeleteAccount(t *testing.T) {
 			server := NewServer(mStore)
 			recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/api/v1/accounts/%d", tc.accountID)
+			url := fmt.Sprintf("/api/v1/owners/%d", tc.ownerID)
 			request, err := http.NewRequest(http.MethodDelete, url, nil)
 			require.NoError(t, err)
 
@@ -623,12 +598,31 @@ func checkBodyResponse(t *testing.T, body *bytes.Buffer, o db.Owner) {
 	require.Equal(t, o, owner)
 }
 
-func createRandomOwner() db.Owner {
-	return db.Owner{
-		ID:        util.RandomInt(1, 1000),
-		Firstname: util.RandomOwner(),
-		Lastname:  util.RandomOwner(),
-		Email:     util.RandEmail(),
-		CreatedAt: util.GetTime(),
+func requierBodyMatchDeleteOwnerResponse(t *testing.T, body *bytes.Buffer, ownerID int64) {
+	// read all data from the response body
+	data, err := ioutil.ReadAll(body)
+	require.NoError(t, err)
+
+	var response struct {
+		Response string `json:"response"`
 	}
+	err = json.Unmarshal(data, &response)
+	require.NoError(t, err)
+
+	// compare the input account and the returened account
+	require.Equal(t, fmt.Sprintf("owner %d deleted", ownerID), response.Response)
+}
+
+func requierBodyMatchOwner(t *testing.T, body *bytes.Buffer, owner db.Owner) {
+	// read all data from the response body
+	data, err := ioutil.ReadAll(body)
+	require.NoError(t, err)
+
+	var bodyOwner db.Owner
+	err = json.Unmarshal(data, &bodyOwner)
+	require.NoError(t, err)
+
+	// compare the input account and the returened account
+	require.Equal(t, owner, bodyOwner)
+
 }
