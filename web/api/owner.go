@@ -14,7 +14,7 @@ func (s *Server) createOwner(ctx *gin.Context) {
 	var request struct {
 		Firstname string `json:"firstname" binding:"required"`
 		Lastname  string `json:"lastname" binding:"required"`
-		Email     string `json:"email" binding:"required"`
+		Email     string `json:"email" binding:"required,email"`
 	}
 
 	err := ctx.ShouldBindJSON(&request)
