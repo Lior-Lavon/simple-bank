@@ -14,9 +14,10 @@ import (
 
 func (s *Server) createTransfer(ctx *gin.Context) {
 	var request struct {
-		FromAccountID int64 `json:"from_account_id" binding:"required"`
-		ToAccountID   int64 `json:"to_account_id" binding:"required"`
-		Amount        int64 `json:"amount" binding:"required"`
+		FromAccountID int64  `json:"from_account_id" binding:"required,min=1"`
+		ToAccountID   int64  `json:"to_account_id" binding:"required,min=1"`
+		Amount        int64  `json:"amount" binding:"required,gte=1,lte=100"`
+		Currency      string `json:"currency" binding:"required,currency"`
 	}
 
 	err := ctx.ShouldBindJSON(&request)
@@ -25,44 +26,50 @@ func (s *Server) createTransfer(ctx *gin.Context) {
 		return
 	}
 
-	// check if account exist
-	_, err = s.store.GetAccount(ctx, request.FromAccountID)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			res := map[string]string{
-				"error": fmt.Sprintf("account %d does not exist", request.FromAccountID),
-			}
-			ctx.JSON(http.StatusNotFound, res)
-			return
-		}
-		ctx.JSON(http.StatusBadGateway, errorResponse(err))
+	if !s.validAccount(ctx, request.FromAccountID, request.Currency) {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
 	}
 
-	_, err = s.store.GetAccount(ctx, request.ToAccountID)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			res := map[string]string{
-				"error": fmt.Sprintf("account %d does not exist", request.ToAccountID),
-			}
-			ctx.JSON(http.StatusNotFound, res)
-			return
-		}
-		ctx.JSON(http.StatusBadGateway, errorResponse(err))
+	if !s.validAccount(ctx, request.ToAccountID, request.Currency) {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
 	}
 
-	arg := db.CreateTransferParams{
-		FromAccountID: request.FromAccountID,
-		ToAccountID:   request.ToAccountID,
+	arg := db.TransferTxParams{
+		FromAccountId: request.FromAccountID,
+		ToAccountId:   request.ToAccountID,
 		Amount:        request.Amount,
 	}
 
-	transfer, err := s.store.CreateTransfer(ctx, arg)
+	result, err := s.store.TransferTx(ctx, arg)
 	if err != nil {
 		ctx.JSON(http.StatusBadGateway, errorResponse(err))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, transfer)
+	ctx.JSON(http.StatusOK, result)
+}
+
+// check if an account with ID ext and the currency matches as given
+func (s *Server) validAccount(ctx *gin.Context, accouID int64, currency string) bool {
+	account, err := s.store.GetAccount(ctx, accouID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return false
+		}
+		ctx.JSON(http.StatusBadGateway, errorResponse(err))
+		return false
+	}
+
+	if account.Currency != currency {
+		err := fmt.Sprintf("account [%v] currency mismatch %s, %s", account.ID, account.Currency, currency)
+		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New(err)))
+		return false
+	}
+
+	return true
 }
 
 func (s *Server) getTransfer(ctx *gin.Context) {
