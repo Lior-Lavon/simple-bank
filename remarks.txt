@@ -82,5 +82,25 @@ https://github.com/kyleconroy/sqlc
 Now we can start writing tests for the API
 // create a account_test.go in the api folder
 
-Custom Param Validator
+Custom Validator: (for Currency options)
+vaidate input Params
+create 'validator.go file 
+import "github.com/go-playground/validator/v10"
+var validCurrency validator.Func 
+create a new file in util package called 'currency.go' to validate one currency filed with a list of possible options
+> Next: register the custom validator with Gin in server.go file
+	// get currect validator engine(interface) and conver it to *validator.Validate pointer
+	v, ok := binding.Validator.Engine().(*validator.Validate)
+	if ok {
+		// register new validator
+		v.RegisterValidation("currency", validCurrency)
+	}
+> Next: change the binding validation input for currenct
+in account.go change oneof=USD EUR with currency
+    //Currency string `json:"currency" binding:"required,oneof=USD EUR"`
+    Currency string `json:"currency" binding:"required,currency"`
+
+
+
+
 
