@@ -10,8 +10,8 @@ https://github.com/golang-migrate/migrate
 > brew install golang-migrate
 > migrate -version // v4.15.2
 > create ./db/migration folders
-// Initialise the db schema 
-> migrate create -ext sql -dir db/migration -seq init_schema [migration_name]
+// create migration
+> migrate create -ext sql -dir db/migration -seq init_schema // migration_name
 // -seq = sequential version number
 // init_schema = [migration_name]
 
@@ -26,6 +26,9 @@ https://github.com/golang-migrate/migrate
 // run migration from project folder
 > migrate -path ../db/migration -database "postgresql://root:secret@localhost:5432/simple_bank?sslmode=disable" -verbose up
 > migrate -path ../db/migration -database "postgresql://root:secret@localhost:5432/simple_bank?sslmode=disable" -verbose down
+
+// create new migration version
+> migrate create -ext sql -dir db/migration -seq add_users
 
 // Auto generating database CRUD code using SQLC
 https://github.com/kyleconroy/sqlc
@@ -71,7 +74,7 @@ https://github.com/kyleconroy/sqlc
 
 // Http testing using Mock-DB
 // https://github.com/golang/mock
-// Install GoMock : go get github.com/golang/mock/mockgen@v1.6.0
+// Install : go install github.com/golang/mock/mockgen@v1.6.0
 >  ls -l ~/go/bin
 >  which mockgen -> result with 'mockgen not found' becouse 
 // create  new folder in db/mock

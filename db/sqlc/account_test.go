@@ -13,10 +13,10 @@ import (
 
 func createRandomAccount(t *testing.T) Account {
 	// create Owner
-	o := createRandomOwner(t)
+	u := createRandomUser(t)
 
 	arg := CreateAccountParams{
-		OwnerID:  o.ID,
+		Owner:    u.Username,
 		Balance:  100,
 		Currency: util.RandomCurrency(),
 	}
@@ -26,7 +26,7 @@ func createRandomAccount(t *testing.T) Account {
 	require.NotEmpty(t, account)
 
 	// check all values compare to input
-	require.Equal(t, arg.OwnerID, account.OwnerID)
+	require.Equal(t, arg.Owner, account.Owner)
 	require.Equal(t, arg.Balance, account.Balance)
 	require.Equal(t, arg.Currency, account.Currency)
 
@@ -39,7 +39,7 @@ func createRandomAccount(t *testing.T) Account {
 
 func deleteRandomAccount(acc Account) {
 	testQueriers.DeleteAccount(context.Background(), acc.ID)
-	testQueriers.DeleteOwner(context.Background(), acc.OwnerID)
+	testQueriers.DeleteUser(context.Background(), acc.Owner)
 
 }
 
@@ -58,7 +58,7 @@ func TestGetAccount(t *testing.T) {
 	assert.NotZero(t, acc2.ID)
 
 	assert.Equal(t, acc1.ID, acc2.ID)
-	assert.Equal(t, acc1.OwnerID, acc2.OwnerID)
+	assert.Equal(t, acc1.Owner, acc2.Owner)
 	assert.Equal(t, acc1.Balance, acc2.Balance)
 	assert.Equal(t, acc1.Currency, acc2.Currency)
 	assert.WithinDuration(t, acc1.CreatedAt, acc2.CreatedAt, time.Second)
@@ -109,7 +109,7 @@ func TestUpdateAccount(t *testing.T) {
 	assert.NotEmpty(t, acc2)
 
 	assert.Equal(t, acc1.ID, acc2.ID)
-	assert.Equal(t, acc1.OwnerID, acc2.OwnerID)
+	assert.Equal(t, acc1.Owner, acc2.Owner)
 	assert.Equal(t, arg.Balance, acc2.Balance)
 	assert.Equal(t, acc1.Currency, acc2.Currency)
 	assert.WithinDuration(t, acc1.CreatedAt, acc2.CreatedAt, time.Second)
@@ -123,7 +123,7 @@ func TestDeleteAccount(t *testing.T) {
 
 	err := testQueriers.DeleteAccount(context.Background(), a.ID)
 	assert.NoError(t, err)
-	testQueriers.DeleteOwner(context.Background(), a.OwnerID)
+	testQueriers.DeleteUser(context.Background(), a.Owner)
 
 	// try to get account
 	acc, err := testQueriers.GetAccount(context.Background(), a.ID)

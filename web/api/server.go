@@ -29,12 +29,12 @@ func NewServer(store db.Store) *Server {
 		v.RegisterValidation("email", validEmail)
 	}
 
-	// owners routing
-	server.router.POST("/api/v1/owners", server.createOwner)
-	server.router.GET("/api/v1/owners/:id", server.getOwner)
-	server.router.GET("/api/v1/owners", server.listOwners)
-	server.router.PUT("/api/v1/owners/:id", server.updateOwner)
-	server.router.DELETE("/api/v1/owners/:id", server.deleteOwner)
+	// users routing
+	server.router.POST("/api/v1/users", server.createUser)
+	server.router.GET("/api/v1/users/:username", server.getUser)
+	server.router.GET("/api/v1/users", server.listUsers)
+	server.router.PUT("/api/v1/users/:username", server.updateUser)
+	server.router.DELETE("/api/v1/users/:username", server.deleteUser)
 
 	// accounts routing
 	server.router.POST("/api/v1/accounts", server.createAccount)
