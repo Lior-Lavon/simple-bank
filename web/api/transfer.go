@@ -27,12 +27,12 @@ func (s *Server) createTransfer(ctx *gin.Context) {
 	}
 
 	if !s.validAccount(ctx, request.FromAccountID, request.Currency) {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		ctx.JSON(http.StatusForbidden, errorResponse(err))
 		return
 	}
 
 	if !s.validAccount(ctx, request.ToAccountID, request.Currency) {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		ctx.JSON(http.StatusForbidden, errorResponse(err))
 		return
 	}
 

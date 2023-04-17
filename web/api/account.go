@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/lib/pq"
 	db "github.com/liorlavon/simplebank/db/sqlc"
 )
 
@@ -25,20 +26,6 @@ func (s *Server) createAccount(ctx *gin.Context) {
 		return
 	}
 
-	// check if owner exist
-	_, err = s.store.GetUser(ctx, request.Owner)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			res := map[string]string{
-				"error": fmt.Sprintf("user %s does not exist", request.Owner),
-			}
-			ctx.JSON(http.StatusNotFound, res)
-			return
-		}
-		ctx.JSON(http.StatusBadGateway, errorResponse(err))
-		return
-	}
-
 	arg := db.CreateAccountParams{
 		Owner:    request.Owner,
 		Balance:  request.Balance,
@@ -47,6 +34,17 @@ func (s *Server) createAccount(ctx *gin.Context) {
 
 	account, err := s.store.CreateAccount(ctx, arg)
 	if err != nil {
+		// try to convert the error to a err.(*pq.Error) type
+		if pqErr, ok := err.(*pq.Error); ok {
+			switch pqErr.Code.Name() {
+			case "foreign_key_violation":
+				ctx.JSON(http.StatusForbidden, errorResponse(err))
+				return
+			case "unique_violation":
+				ctx.JSON(http.StatusForbidden, errorResponse(err))
+				return
+			}
+		}
 		ctx.JSON(http.StatusBadGateway, errorResponse(err))
 		return
 	}
