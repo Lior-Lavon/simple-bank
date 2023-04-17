@@ -29,8 +29,8 @@ func RandomString(n int) string {
 	return ret.String()
 }
 
-// generate randome owner name
-func RandomOwner() string {
+// generate randome user name
+func RandomUser() string {
 	return RandomString(6) // random string of 6 letters
 }
 

@@ -11,10 +11,10 @@ import (
 
 func createRandomEntry(t *testing.T) Entry {
 
-	o := createRandomOwner(t)
+	u := createRandomUser(t)
 
 	argAcc := CreateAccountParams{
-		OwnerID:  o.ID,
+		Owner:    u.Username,
 		Balance:  util.RandomMoney(),
 		Currency: util.RandomCurrency(),
 	}
@@ -46,7 +46,7 @@ func deleteRandomEntry(t *testing.T, entry Entry) {
 	assert.NoError(t, err)
 
 	testQueriers.DeleteAccount(context.Background(), ac.ID)
-	testQueriers.DeleteOwner(context.Background(), ac.OwnerID)
+	testQueriers.DeleteUser(context.Background(), ac.Owner)
 }
 
 func TestCreateEntry(t *testing.T) {

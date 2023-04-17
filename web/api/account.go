@@ -13,8 +13,8 @@ import (
 
 func (s *Server) createAccount(ctx *gin.Context) {
 	var request struct {
-		OwnerID int64 `json:"owner_id" binding:"required"`
-		Balance int64 `json:"balance" binding:"required"`
+		Owner   string `json:"owner" binding:"required"`
+		Balance int64  `json:"balance" binding:"required"`
 		//Currency string `json:"currency" binding:"required,oneof=USD EUR"`
 		Currency string `json:"currency" binding:"required,currency"`
 	}
@@ -26,11 +26,11 @@ func (s *Server) createAccount(ctx *gin.Context) {
 	}
 
 	// check if owner exist
-	_, err = s.store.GetOwner(ctx, request.OwnerID)
+	_, err = s.store.GetUser(ctx, request.Owner)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			res := map[string]string{
-				"error": fmt.Sprintf("owner %d does not exist", request.OwnerID),
+				"error": fmt.Sprintf("user %s does not exist", request.Owner),
 			}
 			ctx.JSON(http.StatusNotFound, res)
 			return
@@ -40,7 +40,7 @@ func (s *Server) createAccount(ctx *gin.Context) {
 	}
 
 	arg := db.CreateAccountParams{
-		OwnerID:  request.OwnerID,
+		Owner:    request.Owner,
 		Balance:  request.Balance,
 		Currency: request.Currency,
 	}
@@ -208,7 +208,7 @@ func (s *Server) deleteAccount(ctx *gin.Context) {
 
 func prepareAccountResponse(s *Server, ctx context.Context, account db.Account) (res map[string]any, err error) {
 
-	owner, err := s.store.GetOwner(ctx, account.OwnerID)
+	owner, err := s.store.GetUser(ctx, account.Owner)
 	if err != nil {
 		return
 	}

@@ -1,0 +1,11 @@
+ALTER TABLE IF EXISTS "accounts" DROP CONSTRAINT IF EXISTS "accounts_owner_id_fkey";
+
+ALTER TABLE IF EXISTS "accounts" RENAME COLUMN owner_id TO owner;
+ALTER TABLE IF EXISTS "accounts" ALTER COLUMN owner TYPE VARCHAR;
+
+DROP TABLE IF EXISTS owners;
+
+
+
+
+

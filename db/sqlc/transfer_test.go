@@ -10,18 +10,20 @@ import (
 )
 
 func createRandomAccounts(t *testing.T) (a1 Account, a2 Account) {
-
 	// create owner1
-	argOwner1 := CreateOwnerParams{
-		Firstname: util.RandomOwner(),
-		Lastname:  util.RandomOwner(),
-		Email:     util.RandEmail(),
+	argOwner1 := CreateUserParams{
+		Username:       util.RandomUser(),
+		HashedPassword: util.RandomUser(),
+		Firstname:      util.RandomUser(),
+		Lastname:       util.RandomUser(),
+		Email:          util.RandEmail(),
 	}
-	o1, err := testQueriers.CreateOwner(context.Background(), argOwner1)
+
+	u1, err := testQueriers.CreateUser(context.Background(), argOwner1)
 	assert.NoError(t, err)
 	// create account1
 	argAccount1 := CreateAccountParams{
-		OwnerID:  o1.ID,
+		Owner:    u1.Username,
 		Balance:  100,
 		Currency: "USD",
 	}
@@ -29,33 +31,35 @@ func createRandomAccounts(t *testing.T) (a1 Account, a2 Account) {
 	assert.NoError(t, err)
 
 	// create owner2
-	argOwner2 := CreateOwnerParams{
-		Firstname: util.RandomOwner(),
-		Lastname:  util.RandomOwner(),
-		Email:     util.RandEmail(),
+	argOwner2 := CreateUserParams{
+		Username:       util.RandomUser(),
+		HashedPassword: util.RandomUser(),
+		Firstname:      util.RandomUser(),
+		Lastname:       util.RandomUser(),
+		Email:          util.RandEmail(),
 	}
-	o2, err := testQueriers.CreateOwner(context.Background(), argOwner2)
+	u2, err := testQueriers.CreateUser(context.Background(), argOwner2)
 	assert.NoError(t, err)
 	// create account2
 	argAccount2 := CreateAccountParams{
-		OwnerID:  o2.ID,
+		Owner:    u2.Username,
 		Balance:  100,
 		Currency: "USD",
 	}
 	a2, err = testQueriers.CreateAccount(context.Background(), argAccount2)
 	assert.NoError(t, err)
 
-	return a1, a2
+	return
 
 }
 
 func deleteRandomAccounts(t *testing.T, a1 Account, a2 Account) {
 
 	testQueriers.DeleteAccount(context.Background(), a1.ID)
-	testQueriers.DeleteOwner(context.Background(), a1.OwnerID)
+	testQueriers.DeleteUser(context.Background(), a1.Owner)
 
 	testQueriers.DeleteAccount(context.Background(), a2.ID)
-	testQueriers.DeleteOwner(context.Background(), a2.OwnerID)
+	testQueriers.DeleteUser(context.Background(), a2.Owner)
 }
 
 func createRandomTransfer(t *testing.T, a1 Account, a2 Account) Transfer {

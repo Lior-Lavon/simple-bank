@@ -18,11 +18,11 @@ import (
 )
 
 func TestCreateAccount(t *testing.T) {
-	// create random owner & account
-	owner := randomOwner()
+	// create random user & account
+	user := randomUser()
 	account := db.Account{
 		ID:       1,
-		OwnerID:  owner.ID,
+		Owner:    user.Username,
 		Balance:  100,
 		Currency: "USD",
 	}
@@ -30,17 +30,17 @@ func TestCreateAccount(t *testing.T) {
 	// define a list of test cases
 	testCases := []struct {
 		name          string // uniqe test name
-		ownerID       int64
+		Owner         string
 		accountParam  func() db.CreateAccountParams
 		buildStub     func(store *mockdb.MockStore, arg db.CreateAccountParams) // the getAccount stub for each test will be build differently
 		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)   // define a function that will check the output of the API
 	}{
 		{
-			name:    "OK",
-			ownerID: owner.ID,
+			name:  "OK",
+			Owner: user.Username,
 			accountParam: func() db.CreateAccountParams {
 				return db.CreateAccountParams{
-					OwnerID:  owner.ID,
+					Owner:    user.Username,
 					Balance:  100,
 					Currency: "USD",
 				}
@@ -48,9 +48,9 @@ func TestCreateAccount(t *testing.T) {
 			buildStub: func(store *mockdb.MockStore, arg db.CreateAccountParams) {
 				gomock.InOrder(
 					store.EXPECT().
-						GetOwner(gomock.Any(), gomock.Eq(owner.ID)).
+						GetUser(gomock.Any(), gomock.Eq(user.Username)).
 						Times(1).
-						Return(owner, nil),
+						Return(user, nil),
 					store.EXPECT().
 						CreateAccount(gomock.Any(), arg).
 						Times(1).
@@ -66,8 +66,8 @@ func TestCreateAccount(t *testing.T) {
 			},
 		},
 		{
-			name:    "ValidationIssue",
-			ownerID: owner.ID,
+			name:  "ValidationIssue",
+			Owner: user.Username,
 			accountParam: func() db.CreateAccountParams {
 				return db.CreateAccountParams{
 					// OwnerID:  owner.ID,
@@ -78,7 +78,7 @@ func TestCreateAccount(t *testing.T) {
 			buildStub: func(store *mockdb.MockStore, arg db.CreateAccountParams) {
 				gomock.InOrder(
 					store.EXPECT().
-						GetOwner(gomock.Any(), gomock.Eq(owner.ID)).
+						GetUser(gomock.Any(), gomock.Eq(user.Username)).
 						Times(0),
 					store.EXPECT().
 						CreateAccount(gomock.Any(), arg).
@@ -91,11 +91,11 @@ func TestCreateAccount(t *testing.T) {
 			},
 		},
 		{
-			name:    "OwnerNotExist",
-			ownerID: owner.ID,
+			name:  "UserNotExist",
+			Owner: user.Username,
 			accountParam: func() db.CreateAccountParams {
 				return db.CreateAccountParams{
-					OwnerID:  owner.ID,
+					Owner:    user.Username,
 					Balance:  100,
 					Currency: "USD",
 				}
@@ -103,9 +103,9 @@ func TestCreateAccount(t *testing.T) {
 			buildStub: func(store *mockdb.MockStore, arg db.CreateAccountParams) {
 				gomock.InOrder(
 					store.EXPECT().
-						GetOwner(gomock.Any(), gomock.Eq(owner.ID)).
+						GetUser(gomock.Any(), gomock.Eq(user.Username)).
 						Times(1).
-						Return(db.Owner{}, sql.ErrNoRows),
+						Return(db.User{}, sql.ErrNoRows),
 					store.EXPECT().
 						CreateAccount(gomock.Any(), arg).
 						Times(0),
@@ -116,15 +116,15 @@ func TestCreateAccount(t *testing.T) {
 				require.Equal(t, http.StatusNotFound, recorder.Code)
 
 				// check the response Body
-				requierBodyMatchOwnerDoesNotExist(t, recorder.Body, owner.ID)
+				requierBodyMatchUserDoesNotExist(t, recorder.Body, user.Username)
 			},
 		},
 		{
-			name:    "GetOwnerBadGateway",
-			ownerID: owner.ID,
+			name:  "GetUserBadGateway",
+			Owner: user.Username,
 			accountParam: func() db.CreateAccountParams {
 				return db.CreateAccountParams{
-					OwnerID:  owner.ID,
+					Owner:    user.Username,
 					Balance:  100,
 					Currency: "USD",
 				}
@@ -132,9 +132,9 @@ func TestCreateAccount(t *testing.T) {
 			buildStub: func(store *mockdb.MockStore, arg db.CreateAccountParams) {
 				gomock.InOrder(
 					store.EXPECT().
-						GetOwner(gomock.Any(), gomock.Eq(owner.ID)).
+						GetUser(gomock.Any(), gomock.Eq(user.Username)).
 						Times(1).
-						Return(db.Owner{}, sql.ErrConnDone),
+						Return(db.User{}, sql.ErrConnDone),
 					store.EXPECT().
 						CreateAccount(gomock.Any(), arg).
 						Times(0),
@@ -146,11 +146,11 @@ func TestCreateAccount(t *testing.T) {
 			},
 		},
 		{
-			name:    "CreateAccountBadGateway",
-			ownerID: owner.ID,
+			name:  "CreateAccountBadGateway",
+			Owner: user.Username,
 			accountParam: func() db.CreateAccountParams {
 				return db.CreateAccountParams{
-					OwnerID:  owner.ID,
+					Owner:    user.Username,
 					Balance:  100,
 					Currency: "USD",
 				}
@@ -158,9 +158,9 @@ func TestCreateAccount(t *testing.T) {
 			buildStub: func(store *mockdb.MockStore, arg db.CreateAccountParams) {
 				gomock.InOrder(
 					store.EXPECT().
-						GetOwner(gomock.Any(), gomock.Eq(owner.ID)).
+						GetUser(gomock.Any(), gomock.Eq(user.Username)).
 						Times(1).
-						Return(owner, nil),
+						Return(user, nil),
 					store.EXPECT().
 						CreateAccount(gomock.Any(), arg).
 						Times(1).
@@ -732,18 +732,20 @@ func TestDeleteAccount(t *testing.T) {
 func randomAccount() db.Account {
 	return db.Account{
 		ID:       util.RandomInt(1, 1000),
-		OwnerID:  util.RandomInt(1, 1000),
+		Owner:    util.RandomUser(),
 		Balance:  util.RandomMoney(),
 		Currency: util.RandomCurrency(),
 	}
 }
 
-func randomOwner() db.Owner {
-	return db.Owner{
-		ID:        util.RandomInt(1, 1000),
-		Firstname: util.RandomOwner(),
-		Lastname:  util.RandomOwner(),
-		Email:     util.RandEmail(),
+func randomUser() db.User {
+	hp, _ := util.HashPassword("secret")
+	return db.User{
+		Username:       "llavon",
+		HashedPassword: hp,
+		Firstname:      "lior",
+		Lastname:       "lavon",
+		Email:          "lior.lavon@gmail.com",
 	}
 }
 
@@ -777,7 +779,7 @@ func requierBodyMatchResponse(t *testing.T, body *bytes.Buffer, accountID int64)
 	require.Equal(t, fmt.Sprintf("account %d deleted", accountID), response.Response)
 }
 
-func requierBodyMatchOwnerDoesNotExist(t *testing.T, body *bytes.Buffer, ownerID int64) {
+func requierBodyMatchUserDoesNotExist(t *testing.T, body *bytes.Buffer, username string) {
 	// read all data from the response body
 	data, err := ioutil.ReadAll(body)
 	require.NoError(t, err)
@@ -789,7 +791,7 @@ func requierBodyMatchOwnerDoesNotExist(t *testing.T, body *bytes.Buffer, ownerID
 	require.NoError(t, err)
 
 	// compare the input account and the returened account
-	require.Equal(t, fmt.Sprintf("owner %d does not exist", ownerID), response.Error)
+	require.Equal(t, fmt.Sprintf("user %s does not exist", username), response.Error)
 }
 
 func requierBodyMatchListAccountOK(t *testing.T, body *bytes.Buffer, limit int32) {
