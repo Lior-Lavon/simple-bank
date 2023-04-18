@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/lib/pq"
 	db "github.com/liorlavon/simplebank/db/sqlc"
 	"github.com/liorlavon/simplebank/util"
 )
@@ -38,6 +39,18 @@ func (s *Server) createUser(ctx *gin.Context) {
 
 	user, err := s.store.CreateUser(ctx, arg)
 	if err != nil {
+		// try to convert the error to a err.(*pq.Error) type
+		if pqErr, ok := err.(*pq.Error); ok {
+			switch pqErr.Code.Name() {
+			case "foreign_key_violation":
+				ctx.JSON(http.StatusForbidden, errorResponse(err))
+				return
+			case "unique_violation":
+				ctx.JSON(http.StatusForbidden, errorResponse(err))
+				return
+			}
+		}
+
 		ctx.JSON(http.StatusBadGateway, errorResponse(err))
 		return
 	}

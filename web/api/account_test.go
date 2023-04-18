@@ -48,10 +48,6 @@ func TestCreateAccount(t *testing.T) {
 			buildStub: func(store *mockdb.MockStore, arg db.CreateAccountParams) {
 				gomock.InOrder(
 					store.EXPECT().
-						GetUser(gomock.Any(), gomock.Eq(user.Username)).
-						Times(1).
-						Return(user, nil),
-					store.EXPECT().
 						CreateAccount(gomock.Any(), arg).
 						Times(1).
 						Return(account, nil),
@@ -78,9 +74,6 @@ func TestCreateAccount(t *testing.T) {
 			buildStub: func(store *mockdb.MockStore, arg db.CreateAccountParams) {
 				gomock.InOrder(
 					store.EXPECT().
-						GetUser(gomock.Any(), gomock.Eq(user.Username)).
-						Times(0),
-					store.EXPECT().
 						CreateAccount(gomock.Any(), arg).
 						Times(0),
 				)
@@ -88,61 +81,6 @@ func TestCreateAccount(t *testing.T) {
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				// check statusCode response
 				require.Equal(t, http.StatusBadRequest, recorder.Code)
-			},
-		},
-		{
-			name:  "UserNotExist",
-			Owner: user.Username,
-			accountParam: func() db.CreateAccountParams {
-				return db.CreateAccountParams{
-					Owner:    user.Username,
-					Balance:  100,
-					Currency: "USD",
-				}
-			},
-			buildStub: func(store *mockdb.MockStore, arg db.CreateAccountParams) {
-				gomock.InOrder(
-					store.EXPECT().
-						GetUser(gomock.Any(), gomock.Eq(user.Username)).
-						Times(1).
-						Return(db.User{}, sql.ErrNoRows),
-					store.EXPECT().
-						CreateAccount(gomock.Any(), arg).
-						Times(0),
-				)
-			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				// check statusCode response
-				require.Equal(t, http.StatusNotFound, recorder.Code)
-
-				// check the response Body
-				requierBodyMatchUserDoesNotExist(t, recorder.Body, user.Username)
-			},
-		},
-		{
-			name:  "GetUserBadGateway",
-			Owner: user.Username,
-			accountParam: func() db.CreateAccountParams {
-				return db.CreateAccountParams{
-					Owner:    user.Username,
-					Balance:  100,
-					Currency: "USD",
-				}
-			},
-			buildStub: func(store *mockdb.MockStore, arg db.CreateAccountParams) {
-				gomock.InOrder(
-					store.EXPECT().
-						GetUser(gomock.Any(), gomock.Eq(user.Username)).
-						Times(1).
-						Return(db.User{}, sql.ErrConnDone),
-					store.EXPECT().
-						CreateAccount(gomock.Any(), arg).
-						Times(0),
-				)
-			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				// check statusCode response
-				require.Equal(t, http.StatusBadGateway, recorder.Code)
 			},
 		},
 		{
@@ -157,10 +95,6 @@ func TestCreateAccount(t *testing.T) {
 			},
 			buildStub: func(store *mockdb.MockStore, arg db.CreateAccountParams) {
 				gomock.InOrder(
-					store.EXPECT().
-						GetUser(gomock.Any(), gomock.Eq(user.Username)).
-						Times(1).
-						Return(user, nil),
 					store.EXPECT().
 						CreateAccount(gomock.Any(), arg).
 						Times(1).

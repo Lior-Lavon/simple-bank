@@ -28,20 +28,21 @@ func createRandomUser(t *testing.T) User {
 	require.NoError(t, err)
 	require.NotEmpty(t, user)
 
+	require.Equal(t, arg.Username, user.Username)
+	require.Equal(t, arg.HashedPassword, user.HashedPassword)
 	require.Equal(t, arg.Firstname, user.Firstname)
 	require.Equal(t, arg.Lastname, user.Lastname)
 	require.Equal(t, arg.Email, user.Email)
 
-	require.NotZero(t, user.Username)
-	require.NotZero(t, user.HashedPassword)
+	// PasswordChangedAt is created with default 0 values , so IsZero should be true
+	require.True(t, user.PasswordChangedAt.IsZero())
 	require.NotZero(t, user.CreatedAt)
 
 	return user
 }
 
 func TestCreateUser(t *testing.T) {
-	u := createRandomUser(t)
-	testQueriers.DeleteUser(context.Background(), u.Username)
+	createRandomUser(t)
 }
 
 func TestGetUser(t *testing.T) {
@@ -57,12 +58,12 @@ func TestGetUser(t *testing.T) {
 
 	// check values
 	assert.Equal(t, u.Username, user.Username)
+	assert.Equal(t, u.HashedPassword, user.HashedPassword)
 	assert.Equal(t, u.Firstname, user.Firstname)
 	assert.Equal(t, u.Lastname, user.Lastname)
 	assert.Equal(t, u.Email, user.Email)
+	assert.WithinDuration(t, u.PasswordChangedAt, user.PasswordChangedAt, time.Second)
 	assert.WithinDuration(t, u.CreatedAt, user.CreatedAt, time.Second)
-
-	testQueriers.DeleteUser(context.Background(), u.Username)
 }
 
 func TestUpdateUser(t *testing.T) {
@@ -85,8 +86,6 @@ func TestUpdateUser(t *testing.T) {
 	assert.Equal(t, arg.Lastname, user.Lastname)
 	assert.Equal(t, arg.Email, user.Email)
 	assert.WithinDuration(t, u.CreatedAt, user.CreatedAt, time.Second)
-
-	testQueriers.DeleteUser(context.Background(), u.Username)
 }
 
 func TestDeleteUser(t *testing.T) {
@@ -124,7 +123,4 @@ func TestListUsers(t *testing.T) {
 		assert.NotEmpty(t, o)
 	}
 
-	for _, ow := range createdUsers {
-		testQueriers.DeleteUser(context.Background(), ow.Username)
-	}
 }
