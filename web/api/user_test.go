@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 	"time"
 
@@ -19,6 +20,42 @@ import (
 	"github.com/liorlavon/simplebank/util"
 	"github.com/stretchr/testify/require"
 )
+
+// ************************************************************************************
+// Create Custom Matcher , based on Interface that implements Matches & String functions
+
+type eqCreateUserParamMatcher struct {
+	arg      db.CreateUserParams
+	password string // raw password
+}
+
+func (e eqCreateUserParamMatcher) Matches(x interface{}) bool {
+
+	// as x is an interface , convert x to db.CreateUserParams type
+	argX, ok := x.(db.CreateUserParams)
+	if !ok {
+		return false
+	}
+
+	// check if the hashed password (x) match with the expected password or no (arg)
+	err := util.CheckPassword(e.password, argX.HashedPassword)
+	if err != nil {
+		return false
+	}
+
+	e.arg.HashedPassword = argX.HashedPassword
+	return reflect.DeepEqual(e.arg, argX)
+}
+
+func (e eqCreateUserParamMatcher) String() string {
+	return fmt.Sprintf("match argX %v and password %v", e.arg, e.password)
+}
+
+func EqCreateUserParams(arg db.CreateUserParams, password string) gomock.Matcher {
+	return eqCreateUserParamMatcher{arg, password}
+}
+
+//************************************************************************************
 
 func TestCreateUser(t *testing.T) {
 
@@ -40,8 +77,17 @@ func TestCreateUser(t *testing.T) {
 				"email":     user.Email,
 			},
 			buildStub: func(store *mockdb.MockStore) {
+
+				arg := db.CreateUserParams{
+					Username: user.Username,
+					//					HashedPassword: user.HashedPassword,
+					Firstname: user.Firstname,
+					Lastname:  user.Lastname,
+					Email:     user.Email,
+				}
+
 				store.EXPECT().
-					CreateUser(gomock.Any(), gomock.Any()).
+					CreateUser(gomock.Any(), EqCreateUserParams(arg, rowPassword)).
 					Times(1).
 					Return(user, nil)
 			},
@@ -613,45 +659,10 @@ func TestDeleteUser(t *testing.T) {
 	}
 }
 
-/*
-func TestDeleteUserAPI(t *testing.T) {
-	// create random account
-	account := randomUser()
-
-	// create mock_store
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	// create a new mockDB store
-	mStore := mockdb.NewMockStore(ctrl)
-
-	// build stub
-	mStore.EXPECT().
-		DeleteUser(gomock.Any(), gomock.Eq(account.Username)).
-		Times(1). // expect the GetAccount to be called exactly once
-		Return(nil)
-
-	// start http server and send http request
-	server := NewServer(mStore)
-	recorder := httptest.NewRecorder()
-
-	url := fmt.Sprintf("/api/v1/users/%s", account.Username)
-	request, err := http.NewRequest(http.MethodDelete, url, nil)
-	require.NoError(t, err)
-
-	// send the request to the server router, and response is record in the recorder
-	server.router.ServeHTTP(recorder, request)
-
-	// check statusCode response
-	require.Equal(t, http.StatusOK, recorder.Code)
-
-	// check the response Body account response, and compare it with the given account
-	//	requierBodyMatchAccount(t, recorder.Body, account.)
-}
-*/
-
 func randomUser() (db.User, string) {
-	hp, _ := util.HashPassword("secret")
+	password := "secret"
+	hp, _ := util.HashPassword(password)
+
 	return db.User{
 		Username:          "llavon",
 		HashedPassword:    hp,
@@ -660,7 +671,7 @@ func randomUser() (db.User, string) {
 		Email:             "lior.lavon@gmail.com",
 		PasswordChangedAt: time.Time{},
 		CreatedAt:         time.Time{},
-	}, "secret"
+	}, password
 }
 
 // check the body of the response to equal to db.User
