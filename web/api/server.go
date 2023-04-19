@@ -26,7 +26,7 @@ func NewServer(store db.Store) *Server {
 	if ok {
 		// register new validator
 		v.RegisterValidation("currency", validCurrency)
-		v.RegisterValidation("email", validEmail)
+		//v.RegisterValidation("email", validEmail)
 	}
 
 	// users routing
