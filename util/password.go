@@ -1,26 +1,21 @@
 package util
 
 import (
-	"crypto/sha256"
 	"fmt"
 
 	"golang.org/x/crypto/bcrypt"
 )
 
+// ShashPassword returns the bcrypt hash of the password
 func HashPassword(password string) (string, error) {
-	// using random // different value every time
-	//	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
-	//	return string(bytes), err
-
-	// using SHA256 same value all the time
-	s := password
-	h := sha256.New()
-	h.Write([]byte(s))
-	bs := h.Sum(nil)
-	return fmt.Sprintf("%x\n", bs), nil
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", fmt.Errorf("failed to hash password %v", err)
+	}
+	return string(hashedPassword), nil
 }
 
-func CheckPasswordHash(password, hash string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
-	return err == nil
+// CheckPassword checkes if a provided password is equal to a compared hashed password
+func CheckPassword(hashedPassword string, password string) error {
+	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 }

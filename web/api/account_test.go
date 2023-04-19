@@ -19,7 +19,8 @@ import (
 
 func TestCreateAccount(t *testing.T) {
 	// create random user & account
-	user := randomUser()
+	user, _ := randomUser()
+
 	account := db.Account{
 		ID:       1,
 		Owner:    user.Username,
@@ -669,17 +670,6 @@ func randomAccount() db.Account {
 		Owner:    util.RandomUser(),
 		Balance:  util.RandomMoney(),
 		Currency: util.RandomCurrency(),
-	}
-}
-
-func randomUser() db.User {
-	hp, _ := util.HashPassword("secret")
-	return db.User{
-		Username:       "llavon",
-		HashedPassword: hp,
-		Firstname:      "lior",
-		Lastname:       "lavon",
-		Email:          "lior.lavon@gmail.com",
 	}
 }
 
