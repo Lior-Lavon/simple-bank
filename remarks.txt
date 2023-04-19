@@ -108,8 +108,8 @@ in account.go change oneof=USD EUR with currency
 // checkout password.go 
 
 // Chapter 18:
-// Customer unit-test EXPECT
-
+// Implement gomock Custom matcher for unit-test
+// see example: eqCreateUserParamMatcher in user_test.go
 
 
 

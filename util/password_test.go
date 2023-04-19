@@ -14,7 +14,7 @@ func TestPasswordSuccess(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, hashPassword)
 
-	err = CheckPassword(hashPassword, password)
+	err = CheckPassword(password, hashPassword)
 	require.NoError(t, err)
 }
 
@@ -26,7 +26,7 @@ func TestPasswordFailed(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, hashPassword)
 
-	err = CheckPassword(hashPassword, password2)
+	err = CheckPassword(password2, hashPassword)
 	require.EqualError(t, err, bcrypt.ErrMismatchedHashAndPassword.Error())
 }
 
