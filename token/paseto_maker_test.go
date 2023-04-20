@@ -13,7 +13,7 @@ func TestPasetoMaker(t *testing.T) {
 	maker, err := NewPasetoMaker(util.RandomString(32))
 	require.NoError(t, err)
 
-	// create variables
+	// create variables for payload
 	username := util.RandomUser()
 	duration := time.Minute
 

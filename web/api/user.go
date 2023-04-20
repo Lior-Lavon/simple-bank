@@ -21,13 +21,24 @@ type createUserParam struct {
 	Email     string `json:"email" binding:"required,email"`
 }
 
-type createUserResponse struct {
+type userResponse struct {
 	Username          string    `json:"username"`
 	Firstname         string    `json:"firstname"`
 	Lastname          string    `json:"lastname"`
 	Email             string    `json:"email"`
 	PasswordChangedAt time.Time `json:"password_changed_at"`
 	CreatedAt         time.Time `json:"created_at"`
+}
+
+func newUserResponse(user db.User) userResponse {
+	return userResponse{
+		Username:          user.Username,
+		Firstname:         user.Firstname,
+		Lastname:          user.Lastname,
+		Email:             user.Email,
+		PasswordChangedAt: user.PasswordChangedAt,
+		CreatedAt:         user.CreatedAt,
+	}
 }
 
 func (s *Server) createUser(ctx *gin.Context) {
@@ -67,14 +78,7 @@ func (s *Server) createUser(ctx *gin.Context) {
 	}
 
 	// create a response to hide the hased_password
-	res := createUserResponse{
-		Username:          user.Username,
-		Firstname:         user.Firstname,
-		Lastname:          user.Lastname,
-		Email:             user.Email,
-		PasswordChangedAt: user.PasswordChangedAt,
-		CreatedAt:         user.CreatedAt,
-	}
+	res := newUserResponse(user)
 
 	ctx.JSON(http.StatusOK, res)
 }
@@ -195,5 +199,59 @@ func (s *Server) deleteUser(ctx *gin.Context) {
 	res := map[string]string{
 		"response": fmt.Sprintf("user %s deleted", request.Username),
 	}
+	ctx.JSON(http.StatusOK, res)
+}
+
+// ////// LOGIN REQUEST
+type loginUserRequest struct {
+	Username string `json:"username" binding:"required,alphanum"`
+	Password string `json:"password" binding:"required,min=6"`
+}
+
+type loginUserResponse struct {
+	AccessToken string       `json:"access_token"`
+	User        userResponse `json:"user"`
+}
+
+func (s *Server) loginUser(ctx *gin.Context) {
+
+	var request loginUserRequest
+	err := ctx.ShouldBindJSON(&request)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	// get the user
+	user, err := s.store.GetUser(ctx, request.Username)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	// verify password
+	err = util.CheckPassword(request.Password, user.HashedPassword)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
+	// create authentication PASETO token
+	accessToken, err := s.tokenMaker.CreateToken(request.Username, s.config.AccessTokenDuration)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	// create response
+	res := loginUserResponse{
+		AccessToken: accessToken,
+		User:        newUserResponse(user),
+	}
+
 	ctx.JSON(http.StatusOK, res)
 }

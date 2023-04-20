@@ -1,24 +1,38 @@
 package api
 
 import (
+	"fmt"
+
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
 	db "github.com/liorlavon/simplebank/db/sqlc"
+	"github.com/liorlavon/simplebank/token"
+	"github.com/liorlavon/simplebank/util"
 )
 
 // Server struct
 type Server struct {
-	store  db.Store
-	router *gin.Engine
+	config     util.Config
+	store      db.Store
+	tokenMaker token.Maker
+	router     *gin.Engine
 }
 
 // Create a new server , and setup all routes
-func NewServer(store db.Store) *Server {
+func NewServer(config util.Config, store db.Store) (*Server, error) {
+	// initial tokenMaker
+	tokenMaker, err := token.NewPasetoMaker(config.TokenSymmetricKey)
+	if err != nil {
+		return nil, fmt.Errorf("cannot create token maker : %w", err)
+	}
+
 	// create server
 	server := &Server{
-		store:  store,
-		router: gin.Default(),
+		config:     config,
+		store:      store,
+		tokenMaker: tokenMaker,
+		router:     nil, // set up later
 	}
 
 	// get currect validator engine(interface) and conver it to *validator.Validate pointer
@@ -29,35 +43,45 @@ func NewServer(store db.Store) *Server {
 		//v.RegisterValidation("email", validEmail)
 	}
 
+	// create router and add routes
+	server.router = server.setupRoute()
+
+	return server, nil
+}
+
+func (server *Server) setupRoute() *gin.Engine {
+	router := gin.Default()
+
 	// users routing
-	server.router.POST("/api/v1/users", server.createUser)
-	server.router.GET("/api/v1/users/:username", server.getUser)
-	server.router.GET("/api/v1/users", server.listUsers)
-	server.router.PUT("/api/v1/users/:username", server.updateUser)
-	server.router.DELETE("/api/v1/users/:username", server.deleteUser)
+	router.POST("/api/v1/users/login", server.loginUser)
+	router.POST("/api/v1/users", server.createUser)
+	router.GET("/api/v1/users/:username", server.getUser)
+	router.GET("/api/v1/users", server.listUsers)
+	router.PUT("/api/v1/users/:username", server.updateUser)
+	router.DELETE("/api/v1/users/:username", server.deleteUser)
 
 	// accounts routing
-	server.router.POST("/api/v1/accounts", server.createAccount)
-	server.router.GET("/api/v1/accounts/:id", server.getAccount)
-	server.router.GET("/api/v1/accounts", server.listAccounts)
-	server.router.PUT("/api/v1/accounts/:id", server.updateAccount)
-	server.router.DELETE("/api/v1/accounts/:id", server.deleteAccount)
+	router.POST("/api/v1/accounts", server.createAccount)
+	router.GET("/api/v1/accounts/:id", server.getAccount)
+	router.GET("/api/v1/accounts", server.listAccounts)
+	router.PUT("/api/v1/accounts/:id", server.updateAccount)
+	router.DELETE("/api/v1/accounts/:id", server.deleteAccount)
 
 	// Entries routing
-	server.router.POST("/api/v1/entries", server.createEntry)
-	server.router.GET("/api/v1/entries/:id", server.getEntry)
-	server.router.GET("/api/v1/entries", server.listEntries)
-	server.router.PUT("/api/v1/entries/:id", server.updateEntry)
-	server.router.DELETE("/api/v1/entries/:id", server.deleteEntry)
+	router.POST("/api/v1/entries", server.createEntry)
+	router.GET("/api/v1/entries/:id", server.getEntry)
+	router.GET("/api/v1/entries", server.listEntries)
+	router.PUT("/api/v1/entries/:id", server.updateEntry)
+	router.DELETE("/api/v1/entries/:id", server.deleteEntry)
 
 	// Transfers routing
-	server.router.POST("/api/v1/transfers", server.createTransfer)
-	server.router.GET("/api/v1/transfers/:id", server.getTransfer)
-	server.router.GET("/api/v1/transfers", server.listTransfers)
-	server.router.PUT("/api/v1/transfers/:id", server.updateTransfer)
-	server.router.DELETE("/api/v1/transfers/:id", server.deleteTransfer)
+	router.POST("/api/v1/transfers", server.createTransfer)
+	router.GET("/api/v1/transfers/:id", server.getTransfer)
+	router.GET("/api/v1/transfers", server.listTransfers)
+	router.PUT("/api/v1/transfers/:id", server.updateTransfer)
+	router.DELETE("/api/v1/transfers/:id", server.deleteTransfer)
 
-	return server
+	return router
 }
 
 // Start the http server on the address and listen to API requests
