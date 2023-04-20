@@ -186,8 +186,6 @@ func (s *Server) deleteUser(ctx *gin.Context) {
 		return
 	}
 
-	fmt.Printf("\n userName :%+v\n", request.Username)
-
 	err = s.store.DeleteUser(ctx, request.Username)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))

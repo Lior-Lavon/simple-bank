@@ -113,6 +113,11 @@ in account.go change oneof=USD EUR with currency
 
 // Token based authentication 
 // JWT vs PASETO
+// JWT github : https://github.com/dgrijalva/jwt-go
+// Install : go get github.com/dgrijalva/jwt-go
+// PASETO github : https://github.com/o1egl/paseto
+// Install : go get github.com/o1egl/paseto
+
 
 
 
