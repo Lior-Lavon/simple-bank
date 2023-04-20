@@ -1,15 +1,19 @@
 package util
 
 import (
+	"time"
+
 	"github.com/spf13/viper"
 )
 
 // Config holds all configuration vatiables for the application
 // that we read from file or env. variables
 type Config struct {
-	DBDriver      string `mapstructure:"DB_DRIVER"`
-	DBSource      string `mapstructure:"DB_SOURCE"`
-	ServerAddress string `mapstructure:"SERVER_ADDRESS"`
+	DBDriver            string        `mapstructure:"DB_DRIVER"`
+	DBSource            string        `mapstructure:"DB_SOURCE"`
+	ServerAddress       string        `mapstructure:"SERVER_ADDRESS"`
+	TokenSymmetricKey   string        `mapstructure:"TOKEN_SYMMETRIC_KEY"`
+	AccessTokenDuration time.Duration `mapstructure:"ACCESS_TOKEN_DURATION"`
 }
 
 // read configuration from the file using the path if file exist for development

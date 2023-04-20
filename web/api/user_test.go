@@ -57,6 +57,118 @@ func EqCreateUserParams(arg db.CreateUserParams, password string) gomock.Matcher
 
 //************************************************************************************
 
+func TestUserLogin(t *testing.T) {
+
+	user, rowPassword := randomUser()
+
+	testCases := []struct {
+		name       string
+		body       gin.H
+		buildStub  func(store *mockdb.MockStore)
+		validation func(t *testing.T, recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			body: gin.H{
+				"username": user.Username,
+				"password": rowPassword,
+			},
+			buildStub: func(store *mockdb.MockStore) {
+
+				gomock.InOrder(
+					store.EXPECT().
+						GetUser(gomock.Any(), gomock.Eq(user.Username)).
+						Times(1).
+						Return(user, nil),
+				)
+			},
+			validation: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				// check status code
+				require.Equal(t, http.StatusOK, recorder.Code)
+				arg := loginUserResponse{
+					AccessToken: gomock.Any().String(),
+					User:        newUserResponse(user),
+				}
+				checkBodyLoginResponse(t, recorder.Body, arg)
+			},
+		},
+		{
+			name: "UserNotFound",
+			body: gin.H{
+				"username": user.Username,
+				"password": rowPassword,
+			},
+			buildStub: func(store *mockdb.MockStore) {
+
+				gomock.InOrder(
+					store.EXPECT().
+						GetUser(gomock.Any(), gomock.Eq(user.Username)).
+						Times(1).
+						Return(db.User{}, sql.ErrNoRows),
+				)
+			},
+			validation: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				// check status code
+				require.Equal(t, http.StatusNotFound, recorder.Code)
+			},
+		},
+		{
+			name: "InternalError",
+			body: gin.H{
+				"username": user.Username,
+				"password": rowPassword,
+			},
+			buildStub: func(store *mockdb.MockStore) {
+
+				gomock.InOrder(
+					store.EXPECT().
+						GetUser(gomock.Any(), gomock.Eq(user.Username)).
+						Times(1).
+						Return(db.User{}, sql.ErrConnDone),
+				)
+			},
+			validation: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				// check status code
+				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			},
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+
+			// create new mock
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			// create new mockDB store
+			mStore := mockdb.NewMockStore(ctrl)
+
+			// build stub
+			tc.buildStub(mStore)
+
+			// create http server
+			server := newTestServer(t, mStore)
+			recorder := httptest.NewRecorder()
+
+			// Marshal body data to JSON
+			data, err := json.Marshal(tc.body)
+			require.NoError(t, err)
+
+			url := "/api/v1/users/login"
+			request, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
+			require.NoError(t, err)
+
+			// send the request to the router
+			server.router.ServeHTTP(recorder, request)
+
+			tc.validation(t, recorder)
+		})
+	}
+}
+
 func TestCreateUser(t *testing.T) {
 
 	user, rowPassword := randomUser()
@@ -95,14 +207,7 @@ func TestCreateUser(t *testing.T) {
 				// check status code
 				require.Equal(t, http.StatusOK, recorder.Code)
 
-				arg := createUserResponse{
-					Username:          user.Username,
-					Firstname:         user.Firstname,
-					Lastname:          user.Lastname,
-					Email:             user.Email,
-					PasswordChangedAt: user.PasswordChangedAt,
-					CreatedAt:         user.CreatedAt,
-				}
+				arg := newUserResponse(user)
 
 				checkBodyResponse(t, recorder.Body, arg)
 			},
@@ -204,7 +309,7 @@ func TestCreateUser(t *testing.T) {
 			tc.buildStub(mStore)
 
 			// create http server
-			server := NewServer(mStore)
+			server := newTestServer(t, mStore)
 			recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
@@ -253,14 +358,7 @@ func TestGetUser(t *testing.T) {
 				// check status code
 				require.Equal(t, http.StatusOK, recorder.Code)
 
-				arg := createUserResponse{
-					Username:          user.Username,
-					Firstname:         user.Firstname,
-					Lastname:          user.Lastname,
-					Email:             user.Email,
-					PasswordChangedAt: user.PasswordChangedAt,
-					CreatedAt:         user.CreatedAt,
-				}
+				arg := newUserResponse(user)
 
 				checkBodyResponse(t, recorder.Body, arg)
 			},
@@ -303,7 +401,7 @@ func TestGetUser(t *testing.T) {
 			tc.buildStub()
 
 			// create http server
-			server := NewServer(mStore)
+			server := newTestServer(t, mStore)
 			recorder := httptest.NewRecorder()
 
 			url := fmt.Sprintf("/api/v1/users/%s", tc.username)
@@ -415,7 +513,7 @@ func TestListUsers(t *testing.T) {
 			tc.buildStub(mStore, arg)
 
 			// start http server and send http request
-			server := NewServer(mStore)
+			server := newTestServer(t, mStore)
 			recorder := httptest.NewRecorder()
 
 			url := fmt.Sprintf("/api/v1/users?page_id=%d&page_size=%d", arg.Offset, arg.Limit)
@@ -564,7 +662,7 @@ func TestUpdateUser(t *testing.T) {
 			tc.buildStub(mStore, uap)
 
 			// start http server and send http request
-			server := NewServer(mStore)
+			server := newTestServer(t, mStore)
 			recorder := httptest.NewRecorder()
 
 			// get the createAccountParag from the table
@@ -645,7 +743,7 @@ func TestDeleteUser(t *testing.T) {
 			tc.buildStub(mStore)
 
 			// start http server and send http request
-			server := NewServer(mStore)
+			server := newTestServer(t, mStore)
 			recorder := httptest.NewRecorder()
 
 			request, err := http.NewRequest(http.MethodDelete, tc.url, nil)
@@ -675,17 +773,33 @@ func randomUser() (db.User, string) {
 }
 
 // check the body of the response to equal to db.User
-func checkBodyResponse(t *testing.T, body *bytes.Buffer, u createUserResponse) {
+func checkBodyResponse(t *testing.T, body *bytes.Buffer, u userResponse) {
 
 	// read all data from response body
 	data, err := ioutil.ReadAll(body)
 	require.NoError(t, err)
 
-	var user createUserResponse
+	var user userResponse
 	err = json.Unmarshal(data, &user)
 	require.NoError(t, err)
 
 	require.Equal(t, u, user)
+}
+
+func checkBodyLoginResponse(t *testing.T, body *bytes.Buffer, u loginUserResponse) {
+
+	// read all data from response body
+	data, err := ioutil.ReadAll(body)
+	require.NoError(t, err)
+
+	var loginUser loginUserResponse
+	err = json.Unmarshal(data, &loginUser)
+	require.NoError(t, err)
+
+	u.AccessToken = "is anything"
+	loginUser.AccessToken = "is anything"
+
+	require.Equal(t, u, loginUser)
 }
 
 func requierBodyMatchDeleteUserResponse(t *testing.T, body *bytes.Buffer, username string) {

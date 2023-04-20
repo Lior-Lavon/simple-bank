@@ -124,7 +124,7 @@ func TestCreateAccount(t *testing.T) {
 			tc.buildStub(mStore, cap)
 
 			// start http server and send http request
-			server := NewServer(mStore)
+			server := newTestServer(t, mStore)
 			recorder := httptest.NewRecorder()
 
 			// get the createAccountParag from the table
@@ -240,7 +240,7 @@ func TestListAccount(t *testing.T) {
 			tc.buildStub(mStore, arg)
 
 			// start http server and send http request
-			server := NewServer(mStore)
+			server := newTestServer(t, mStore)
 			recorder := httptest.NewRecorder()
 
 			url := fmt.Sprintf("/api/v1/accounts?page_id=%d&page_size=%d", arg.Offset, arg.Limit)
@@ -275,7 +275,7 @@ func TestGetAccountAPI(t *testing.T) {
 		Return(account, nil)
 
 	// start http server and send http request
-	server := NewServer(mStore)
+	server := newTestServer(t, mStore)
 	recorder := httptest.NewRecorder()
 
 	url := fmt.Sprintf("/api/v1/accounts/%d", account.ID)
@@ -382,7 +382,7 @@ func TestGetAccountAPIUsingTableDrivenTest(t *testing.T) {
 			tc.buildStub(mStore)
 
 			// start http server and send http request
-			server := NewServer(mStore)
+			server := newTestServer(t, mStore)
 			recorder := httptest.NewRecorder()
 
 			url := fmt.Sprintf("/api/v1/accounts/%d", tc.accountID)
@@ -553,7 +553,7 @@ func TestUpdateAccount(t *testing.T) {
 			tc.buildStub(mStore, uap)
 
 			// start http server and send http request
-			server := NewServer(mStore)
+			server := newTestServer(t, mStore)
 			recorder := httptest.NewRecorder()
 
 			// get the createAccountParag from the table
@@ -648,7 +648,7 @@ func TestDeleteAccount(t *testing.T) {
 			tc.buildStub(mStore)
 
 			// start http server and send http request
-			server := NewServer(mStore)
+			server := newTestServer(t, mStore)
 			recorder := httptest.NewRecorder()
 
 			url := fmt.Sprintf("/api/v1/accounts/%d", tc.accountID)
