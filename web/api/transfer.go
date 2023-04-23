@@ -10,6 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	db "github.com/liorlavon/simplebank/db/sqlc"
+	"github.com/liorlavon/simplebank/token"
 )
 
 func (s *Server) createTransfer(ctx *gin.Context) {
@@ -26,13 +27,21 @@ func (s *Server) createTransfer(ctx *gin.Context) {
 		return
 	}
 
-	if !s.validAccount(ctx, request.FromAccountID, request.Currency) {
+	fromAccount, valid := s.validAccount(ctx, request.FromAccountID, request.Currency)
+	if !valid {
+		return
+	}
+
+	// Authorization : a user can only transfare money from his own account
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+	if fromAccount.Owner != authPayload.Username {
+		err := fmt.Errorf("from account does not belong to the authenticated user")
 		ctx.JSON(http.StatusForbidden, errorResponse(err))
 		return
 	}
 
-	if !s.validAccount(ctx, request.ToAccountID, request.Currency) {
-		ctx.JSON(http.StatusForbidden, errorResponse(err))
+	_, valid = s.validAccount(ctx, request.ToAccountID, request.Currency)
+	if !valid {
 		return
 	}
 
@@ -52,24 +61,24 @@ func (s *Server) createTransfer(ctx *gin.Context) {
 }
 
 // check if an account with ID ext and the currency matches as given
-func (s *Server) validAccount(ctx *gin.Context, accouID int64, currency string) bool {
+func (s *Server) validAccount(ctx *gin.Context, accouID int64, currency string) (db.Account, bool) {
 	account, err := s.store.GetAccount(ctx, accouID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
-			return false
+			return account, false
 		}
 		ctx.JSON(http.StatusBadGateway, errorResponse(err))
-		return false
+		return account, false
 	}
 
 	if account.Currency != currency {
 		err := fmt.Sprintf("account [%v] currency mismatch %s, %s", account.ID, account.Currency, currency)
 		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New(err)))
-		return false
+		return account, false
 	}
 
-	return true
+	return account, true
 }
 
 func (s *Server) getTransfer(ctx *gin.Context) {

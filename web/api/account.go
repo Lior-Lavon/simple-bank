@@ -10,24 +10,28 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/lib/pq"
 	db "github.com/liorlavon/simplebank/db/sqlc"
+	"github.com/liorlavon/simplebank/token"
 )
 
-func (s *Server) createAccount(ctx *gin.Context) {
-	var request struct {
-		Owner   string `json:"owner" binding:"required"`
-		Balance int64  `json:"balance" binding:"required"`
-		//Currency string `json:"currency" binding:"required,oneof=USD EUR"`
-		Currency string `json:"currency" binding:"required,currency"`
-	}
+type createAccountRequest struct {
+	//	Owner    string `json:"owner" binding:"required"`
+	Balance  int64  `json:"balance" binding:"required"`
+	Currency string `json:"currency" binding:"required,currency"`
+}
 
+func (s *Server) createAccount(ctx *gin.Context) {
+	var request createAccountRequest
 	err := ctx.ShouldBindJSON(&request)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
+	// Authorization : a user can only create an account for himself
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+
 	arg := db.CreateAccountParams{
-		Owner:    request.Owner,
+		Owner:    authPayload.Username, // add the auth user to the create account param
 		Balance:  request.Balance,
 		Currency: request.Currency,
 	}
@@ -52,10 +56,12 @@ func (s *Server) createAccount(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, account)
 }
 
+type getAccountRequest struct {
+	ID int64 `uri:"id" binding:"required,min=1"`
+}
+
 func (s *Server) getAccount(ctx *gin.Context) {
-	var request struct {
-		ID int64 `uri:"id" binding:"required,min=1"`
-	}
+	var request getAccountRequest
 	err := ctx.ShouldBindUri(&request)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
@@ -82,6 +88,15 @@ func (s *Server) getAccount(ctx *gin.Context) {
 		return
 	}
 
+	// Authorization : a user should only be able to get an account that he owns
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+	// check if this account.owner belongs to the authPayload.username
+	if account.Owner != authPayload.Username {
+		err := fmt.Errorf("account does not belong to the authenticated user")
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
 	var res any
 	if extends.Extends {
 		res, err = prepareAccountResponse(s, ctx, account)
@@ -97,6 +112,7 @@ func (s *Server) getAccount(ctx *gin.Context) {
 }
 
 func (s *Server) listAccounts(ctx *gin.Context) {
+
 	var request struct {
 		PageId   int32 `form:"page_id" binding:"required,min=1"`
 		PageSize int32 `form:"page_size" binding:"required,min=1,max=10"`
@@ -109,7 +125,11 @@ func (s *Server) listAccounts(ctx *gin.Context) {
 		return
 	}
 
+	// Authorization : a user can only list accounts that belongs to him
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+
 	arg := db.ListAccountsParams{
+		Owner:  authPayload.Username,
 		Limit:  int32(request.PageSize),
 		Offset: int32((request.PageId - 1) * request.PageSize),
 	}

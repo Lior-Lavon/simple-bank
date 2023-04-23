@@ -68,28 +68,26 @@ func TestGetAccount(t *testing.T) {
 }
 
 func TestListAccounts(t *testing.T) {
-	var createdAccounts []Account
+
+	var lastAccount Account
 	for i := 0; i < 10; i++ {
-		a := createRandomAccount(t)
-		createdAccounts = append(createdAccounts, a)
+		lastAccount = createRandomAccount(t)
 	}
 
 	arg := ListAccountsParams{
+		Owner:  lastAccount.Owner,
 		Limit:  5,
-		Offset: 5,
+		Offset: 0,
 	}
 
 	accounts, err := testQueriers.ListAccounts(context.Background(), arg)
 	assert.NoError(t, err)
-	assert.Len(t, accounts, 5)
+	assert.NotEmpty(t, accounts)
+	assert.Len(t, accounts, 1)
 
 	for _, account := range accounts {
 		assert.NotEmpty(t, account)
-	}
-
-	// cleare account
-	for _, account := range createdAccounts {
-		deleteRandomAccount(account)
+		assert.Equal(t, lastAccount.Owner, account.Owner)
 	}
 
 }

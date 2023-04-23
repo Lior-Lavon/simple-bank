@@ -408,6 +408,8 @@ func TestGetUser(t *testing.T) {
 			request, err := http.NewRequest(http.MethodGet, url, nil)
 			require.NoError(t, err)
 
+			addAuthenticationHeader(t, server.tokenMaker, request, user.Username)
+
 			// send the request to the router
 			server.router.ServeHTTP(recorder, request)
 
@@ -673,6 +675,8 @@ func TestUpdateUser(t *testing.T) {
 			url := tc.url(uap.Username)
 			request, err := http.NewRequest(http.MethodPut, url, &buf)
 			require.NoError(t, err)
+
+			addAuthenticationHeader(t, server.tokenMaker, request, user.Username)
 
 			// send the request to the server router, and response is record in the recorder
 			server.router.ServeHTTP(recorder, request)

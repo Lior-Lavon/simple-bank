@@ -105,7 +105,8 @@ func (s *Server) getUser(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, o)
+	res := newUserResponse(o)
+	ctx.JSON(http.StatusOK, res)
 }
 
 func (s *Server) listUsers(ctx *gin.Context) {
