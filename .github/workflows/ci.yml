@@ -41,7 +41,7 @@ jobs:
       - name: Set up Go 1.x       # install go into the runner
         uses: actions/setup-go@v2
         with:                     # specifiy additional params, ex: use specific version of Go
-          go-version: ^1.15
+          go-version: ^1.20
         id: go                    # Allias used to identify the step with other steps
 
       - name: Check out the code into the Go module directory
