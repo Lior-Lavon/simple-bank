@@ -118,6 +118,14 @@ in account.go change oneof=USD EUR with currency
 // PASETO github : https://github.com/o1egl/paseto
 // Install : go get github.com/o1egl/paseto
 
+// Authentication Middelware
+// Add the token to the Authorization header of the request to successs authentication and return the relevant details of the token owner
+// implement gin Authentication Middelware
+// A Middelware grab a request to a specific route, Validate the request and can Abort() or call Next() to pass the request to the next Middleware or the handler
+// Add the authMiddleware to the server.go in the setupRoute function after each route that needs authentication
+
+// Authorization defines what permissions 'user' has access to
+
 
 
 

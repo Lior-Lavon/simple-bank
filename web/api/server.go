@@ -55,31 +55,35 @@ func (server *Server) setupRoute() *gin.Engine {
 	// users routing
 	router.POST("/api/v1/users/login", server.loginUser)
 	router.POST("/api/v1/users", server.createUser)
-	router.GET("/api/v1/users/:username", server.getUser)
+
+	// add all routes that have common middlewares or the same group router.
+	authGroup := router.Group("/").Use(authMiddleware(server.tokenMaker))
+
+	authGroup.GET("/api/v1/users/:username", server.getUser)
 	router.GET("/api/v1/users", server.listUsers)
-	router.PUT("/api/v1/users/:username", server.updateUser)
+	authGroup.PUT("/api/v1/users/:username", server.updateUser)
 	router.DELETE("/api/v1/users/:username", server.deleteUser)
 
 	// accounts routing
-	router.POST("/api/v1/accounts", server.createAccount)
-	router.GET("/api/v1/accounts/:id", server.getAccount)
-	router.GET("/api/v1/accounts", server.listAccounts)
-	router.PUT("/api/v1/accounts/:id", server.updateAccount)
-	router.DELETE("/api/v1/accounts/:id", server.deleteAccount)
+	authGroup.POST("/api/v1/accounts", server.createAccount)
+	authGroup.GET("/api/v1/accounts/:id", server.getAccount)
+	authGroup.GET("/api/v1/accounts", server.listAccounts)
+	authGroup.PUT("/api/v1/accounts/:id", server.updateAccount)
+	authGroup.DELETE("/api/v1/accounts/:id", server.deleteAccount)
 
 	// Entries routing
-	router.POST("/api/v1/entries", server.createEntry)
-	router.GET("/api/v1/entries/:id", server.getEntry)
-	router.GET("/api/v1/entries", server.listEntries)
-	router.PUT("/api/v1/entries/:id", server.updateEntry)
-	router.DELETE("/api/v1/entries/:id", server.deleteEntry)
+	authGroup.POST("/api/v1/entries", server.createEntry)
+	authGroup.GET("/api/v1/entries/:id", server.getEntry)
+	authGroup.GET("/api/v1/entries", server.listEntries)
+	authGroup.PUT("/api/v1/entries/:id", server.updateEntry)
+	authGroup.DELETE("/api/v1/entries/:id", server.deleteEntry)
 
 	// Transfers routing
-	router.POST("/api/v1/transfers", server.createTransfer)
-	router.GET("/api/v1/transfers/:id", server.getTransfer)
-	router.GET("/api/v1/transfers", server.listTransfers)
-	router.PUT("/api/v1/transfers/:id", server.updateTransfer)
-	router.DELETE("/api/v1/transfers/:id", server.deleteTransfer)
+	authGroup.POST("/api/v1/transfers", server.createTransfer)
+	authGroup.GET("/api/v1/transfers/:id", server.getTransfer)
+	authGroup.GET("/api/v1/transfers", server.listTransfers)
+	authGroup.PUT("/api/v1/transfers/:id", server.updateTransfer)
+	authGroup.DELETE("/api/v1/transfers/:id", server.deleteTransfer)
 
 	return router
 }

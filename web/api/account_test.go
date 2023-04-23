@@ -13,6 +13,7 @@ import (
 	"github.com/golang/mock/gomock"
 	mockdb "github.com/liorlavon/simplebank/db/mock"
 	db "github.com/liorlavon/simplebank/db/sqlc"
+	"github.com/liorlavon/simplebank/token"
 	"github.com/liorlavon/simplebank/util"
 	"github.com/stretchr/testify/require"
 )
@@ -30,11 +31,12 @@ func TestCreateAccount(t *testing.T) {
 
 	// define a list of test cases
 	testCases := []struct {
-		name          string // uniqe test name
-		Owner         string
-		accountParam  func() db.CreateAccountParams
-		buildStub     func(store *mockdb.MockStore, arg db.CreateAccountParams) // the getAccount stub for each test will be build differently
-		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)   // define a function that will check the output of the API
+		name           string // uniqe test name
+		Owner          string
+		accountParam   func() db.CreateAccountParams
+		authentication func(maker token.Maker, request *http.Request)
+		buildStub      func(store *mockdb.MockStore, arg db.CreateAccountParams) // the getAccount stub for each test will be build differently
+		checkResponse  func(t *testing.T, recorder *httptest.ResponseRecorder)   // define a function that will check the output of the API
 	}{
 		{
 			name:  "OK",
@@ -45,6 +47,9 @@ func TestCreateAccount(t *testing.T) {
 					Balance:  100,
 					Currency: "USD",
 				}
+			},
+			authentication: func(maker token.Maker, request *http.Request) {
+				addAuthenticationHeader(t, maker, request, user.Username)
 			},
 			buildStub: func(store *mockdb.MockStore, arg db.CreateAccountParams) {
 				gomock.InOrder(
@@ -67,10 +72,12 @@ func TestCreateAccount(t *testing.T) {
 			Owner: user.Username,
 			accountParam: func() db.CreateAccountParams {
 				return db.CreateAccountParams{
-					// OwnerID:  owner.ID,
-					Balance:  100,
+					//					Balance:  100,
 					Currency: "USD",
 				}
+			},
+			authentication: func(maker token.Maker, request *http.Request) {
+				addAuthenticationHeader(t, maker, request, user.Username)
 			},
 			buildStub: func(store *mockdb.MockStore, arg db.CreateAccountParams) {
 				gomock.InOrder(
@@ -93,6 +100,9 @@ func TestCreateAccount(t *testing.T) {
 					Balance:  100,
 					Currency: "USD",
 				}
+			},
+			authentication: func(maker token.Maker, request *http.Request) {
+				addAuthenticationHeader(t, maker, request, user.Username)
 			},
 			buildStub: func(store *mockdb.MockStore, arg db.CreateAccountParams) {
 				gomock.InOrder(
@@ -136,6 +146,9 @@ func TestCreateAccount(t *testing.T) {
 			request, err := http.NewRequest(http.MethodPost, url, &buf)
 			require.NoError(t, err)
 
+			// add authentication
+			tc.authentication(server.tokenMaker, request)
+
 			// send the request to the server router, and response is record in the recorder
 			server.router.ServeHTTP(recorder, request)
 
@@ -146,25 +159,32 @@ func TestCreateAccount(t *testing.T) {
 
 func TestListAccount(t *testing.T) {
 	// create random list accounts
+	user, _ := randomUser()
 	var accounts []db.Account
 	for i := 0; i < 5; i++ {
-		accounts = append(accounts, randomAccount())
+		accounts = append(accounts, randomAccount(user.Username))
 	}
-
 	// define a list of test cases
+
 	testCases := []struct {
 		name             string // uniqe test name
 		listAccountParam func() db.ListAccountsParams
+		authentication   func(maker token.Maker, request *http.Request)
 		buildStub        func(store *mockdb.MockStore, arg db.ListAccountsParams)             // the getAccount stub for each test will be build differently
 		checkResponse    func(t *testing.T, recorder *httptest.ResponseRecorder, limit int32) // define a function that will check the output of the API
 	}{
+
 		{
 			name: "OK",
 			listAccountParam: func() db.ListAccountsParams {
 				return db.ListAccountsParams{
+					Owner:  user.Username,
 					Limit:  5,
 					Offset: 1,
 				}
+			},
+			authentication: func(maker token.Maker, request *http.Request) {
+				addAuthenticationHeader(t, maker, request, user.Username)
 			},
 			buildStub: func(store *mockdb.MockStore, arg db.ListAccountsParams) {
 				arg.Offset--
@@ -186,9 +206,13 @@ func TestListAccount(t *testing.T) {
 			name: "Validation",
 			listAccountParam: func() db.ListAccountsParams {
 				return db.ListAccountsParams{
+					Owner:  user.Username,
 					Limit:  5,
 					Offset: 0,
 				}
+			},
+			authentication: func(maker token.Maker, request *http.Request) {
+				addAuthenticationHeader(t, maker, request, user.Username)
 			},
 			buildStub: func(store *mockdb.MockStore, arg db.ListAccountsParams) {
 				arg.Offset--
@@ -206,9 +230,13 @@ func TestListAccount(t *testing.T) {
 			name: "listAccountError",
 			listAccountParam: func() db.ListAccountsParams {
 				return db.ListAccountsParams{
+					Owner:  user.Username,
 					Limit:  5,
 					Offset: 1,
 				}
+			},
+			authentication: func(maker token.Maker, request *http.Request) {
+				addAuthenticationHeader(t, maker, request, user.Username)
 			},
 			buildStub: func(store *mockdb.MockStore, arg db.ListAccountsParams) {
 				arg.Offset--
@@ -247,19 +275,23 @@ func TestListAccount(t *testing.T) {
 			request, err := http.NewRequest(http.MethodGet, url, nil)
 			require.NoError(t, err)
 
+			// add authentication
+			tc.authentication(server.tokenMaker, request)
+
 			// send the request to the server router, and response is record in the recorder
 			server.router.ServeHTTP(recorder, request)
 
 			tc.checkResponse(t, recorder, arg.Limit)
 		})
 	}
-
 }
 
+/*
 // single test with out case table
 func TestGetAccountAPI(t *testing.T) {
+	user, _ := randomUser()
 	// create random account
-	account := randomAccount()
+	account := randomAccount(user.Username)
 
 	// create mock_store
 	ctrl := gomock.NewController(t)
@@ -291,24 +323,29 @@ func TestGetAccountAPI(t *testing.T) {
 	// check the response Body account response, and compare it with the given account
 	requierBodyMatchAccount(t, recorder.Body, account)
 }
-
+*/
 // using Table DrivenTest
 
-func TestGetAccountAPIUsingTableDrivenTest(t *testing.T) {
+func TestGetAccount(t *testing.T) {
 	// create random account
-	account := randomAccount()
+	user, _ := randomUser()
+	account := randomAccount(user.Username)
 
 	// table driven test set to cover all possible senarios
 	// define a list of test cases
 	testCases := []struct {
-		name          string                                                  // uniqe test name
-		accountID     int64                                                   //  accountID that we want to get
-		buildStub     func(store *mockdb.MockStore)                           // the getAccount stub for each test will be build differently
-		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder) // define a function that will check the output of the API
+		name           string // uniqe test name
+		accountID      int64  //  accountID that we want to get
+		authentication func(maker token.Maker, request *http.Request)
+		buildStub      func(store *mockdb.MockStore)                           // the getAccount stub for each test will be build differently
+		checkResponse  func(t *testing.T, recorder *httptest.ResponseRecorder) // define a function that will check the output of the API
 	}{
 		{
 			name:      "OK",
 			accountID: account.ID,
+			authentication: func(maker token.Maker, request *http.Request) {
+				addAuthenticationHeader(t, maker, request, account.Owner)
+			},
 			buildStub: func(store *mockdb.MockStore) {
 				// build stub
 				store.EXPECT().
@@ -326,6 +363,9 @@ func TestGetAccountAPIUsingTableDrivenTest(t *testing.T) {
 		{
 			name:      "NotFound",
 			accountID: account.ID,
+			authentication: func(maker token.Maker, request *http.Request) {
+				addAuthenticationHeader(t, maker, request, account.Owner)
+			},
 			buildStub: func(store *mockdb.MockStore) {
 				// build stub
 				store.EXPECT().
@@ -341,6 +381,9 @@ func TestGetAccountAPIUsingTableDrivenTest(t *testing.T) {
 		{
 			name:      "InternalError",
 			accountID: account.ID,
+			authentication: func(maker token.Maker, request *http.Request) {
+				addAuthenticationHeader(t, maker, request, account.Owner)
+			},
 			buildStub: func(store *mockdb.MockStore) {
 				// build stub
 				store.EXPECT().
@@ -356,6 +399,9 @@ func TestGetAccountAPIUsingTableDrivenTest(t *testing.T) {
 		{
 			name:      "InvalidID",
 			accountID: 0,
+			authentication: func(maker token.Maker, request *http.Request) {
+				addAuthenticationHeader(t, maker, request, account.Owner)
+			},
 			buildStub: func(store *mockdb.MockStore) {
 				// build stub
 				store.EXPECT().
@@ -365,6 +411,24 @@ func TestGetAccountAPIUsingTableDrivenTest(t *testing.T) {
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				// check statusCode response
 				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			},
+		},
+		{
+			name:      "Unauthorize",
+			accountID: account.ID,
+			authentication: func(maker token.Maker, request *http.Request) {
+				addAuthenticationHeader(t, maker, request, "unauthorize_user")
+			},
+			buildStub: func(store *mockdb.MockStore) {
+				// build stub
+				store.EXPECT().
+					GetAccount(gomock.Any(), gomock.Eq(account.ID)).
+					Times(1). // expect the GetAccount to be called exactly once
+					Return(account, nil)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				// check statusCode response
+				require.Equal(t, http.StatusUnauthorized, recorder.Code)
 			},
 		},
 	}
@@ -389,6 +453,9 @@ func TestGetAccountAPIUsingTableDrivenTest(t *testing.T) {
 			request, err := http.NewRequest(http.MethodGet, url, nil)
 			require.NoError(t, err)
 
+			// add authentication
+			tc.authentication(server.tokenMaker, request)
+
 			// send the request to the server router, and response is record in the recorder
 			server.router.ServeHTTP(recorder, request)
 			tc.checkResponse(t, recorder)
@@ -398,24 +465,29 @@ func TestGetAccountAPIUsingTableDrivenTest(t *testing.T) {
 }
 
 func TestUpdateAccount(t *testing.T) {
+	user, _ := randomUser()
 	// create random account
-	account := randomAccount()
+	account := randomAccount(user.Username)
 	// create updated account
 	updatedAccount := db.Account(account)
 	updatedAccount.Balance += 50
 
 	// define a list of test cases
 	testCases := []struct {
-		name          string // uniqe test name
-		url           func(id int32) string
-		accountParam  func() db.UpdateAccountParams
-		buildStub     func(store *mockdb.MockStore, arg db.UpdateAccountParams) // the getAccount stub for each test will be build differently
-		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)   // define a function that will check the output of the API
+		name           string // uniqe test name
+		url            func(id int32) string
+		authentication func(maker token.Maker, request *http.Request)
+		accountParam   func() db.UpdateAccountParams
+		buildStub      func(store *mockdb.MockStore, arg db.UpdateAccountParams) // the getAccount stub for each test will be build differently
+		checkResponse  func(t *testing.T, recorder *httptest.ResponseRecorder)   // define a function that will check the output of the API
 	}{
 		{
 			name: "OK",
 			url: func(id int32) string {
 				return fmt.Sprintf("/api/v1/accounts/%d", id)
+			},
+			authentication: func(maker token.Maker, request *http.Request) {
+				addAuthenticationHeader(t, maker, request, account.Owner)
 			},
 			accountParam: func() db.UpdateAccountParams {
 				return db.UpdateAccountParams{
@@ -445,6 +517,9 @@ func TestUpdateAccount(t *testing.T) {
 				id = 0
 				return fmt.Sprintf("/api/v1/accounts/%d", id)
 			},
+			authentication: func(maker token.Maker, request *http.Request) {
+				addAuthenticationHeader(t, maker, request, account.Owner)
+			},
 			accountParam: func() db.UpdateAccountParams {
 				return db.UpdateAccountParams{
 					ID:      account.ID,
@@ -468,6 +543,9 @@ func TestUpdateAccount(t *testing.T) {
 			url: func(id int32) string {
 				return fmt.Sprintf("/api/v1/accounts/%d", id)
 			},
+			authentication: func(maker token.Maker, request *http.Request) {
+				addAuthenticationHeader(t, maker, request, account.Owner)
+			},
 			accountParam: func() db.UpdateAccountParams {
 				return db.UpdateAccountParams{
 					ID: account.ID,
@@ -490,6 +568,9 @@ func TestUpdateAccount(t *testing.T) {
 			url: func(id int32) string {
 				id = 500
 				return fmt.Sprintf("/api/v1/accounts/%d", id)
+			},
+			authentication: func(maker token.Maker, request *http.Request) {
+				addAuthenticationHeader(t, maker, request, account.Owner)
 			},
 			accountParam: func() db.UpdateAccountParams {
 				return db.UpdateAccountParams{
@@ -516,6 +597,9 @@ func TestUpdateAccount(t *testing.T) {
 			name: "UpdateAccountError",
 			url: func(id int32) string {
 				return fmt.Sprintf("/api/v1/accounts/%d", id)
+			},
+			authentication: func(maker token.Maker, request *http.Request) {
+				addAuthenticationHeader(t, maker, request, account.Owner)
 			},
 			accountParam: func() db.UpdateAccountParams {
 				return db.UpdateAccountParams{
@@ -565,6 +649,9 @@ func TestUpdateAccount(t *testing.T) {
 			request, err := http.NewRequest(http.MethodPut, url, &buf)
 			require.NoError(t, err)
 
+			// add authentication
+			tc.authentication(server.tokenMaker, request)
+
 			// send the request to the server router, and response is record in the recorder
 			server.router.ServeHTTP(recorder, request)
 
@@ -574,19 +661,24 @@ func TestUpdateAccount(t *testing.T) {
 }
 
 func TestDeleteAccount(t *testing.T) {
+	user, _ := randomUser()
 	// create random account
-	account := randomAccount()
+	account := randomAccount(user.Username)
 
 	// define a list of test cases
 	testCases := []struct {
-		name          string                                                  // uniqe test name
-		accountID     int64                                                   //  accountID that we want to get
-		buildStub     func(store *mockdb.MockStore)                           // the getAccount stub for each test will be build differently
-		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder) // define a function that will check the output of the API
+		name           string // uniqe test name
+		accountID      int64  //  accountID that we want to get
+		authentication func(maker token.Maker, request *http.Request)
+		buildStub      func(store *mockdb.MockStore)                           // the getAccount stub for each test will be build differently
+		checkResponse  func(t *testing.T, recorder *httptest.ResponseRecorder) // define a function that will check the output of the API
 	}{
 		{
 			name:      "OK",
 			accountID: account.ID,
+			authentication: func(maker token.Maker, request *http.Request) {
+				addAuthenticationHeader(t, maker, request, account.Owner)
+			},
 			buildStub: func(store *mockdb.MockStore) {
 				// build stub
 				store.EXPECT().
@@ -606,6 +698,9 @@ func TestDeleteAccount(t *testing.T) {
 		{
 			name:      "BadRequest",
 			accountID: 0,
+			authentication: func(maker token.Maker, request *http.Request) {
+				addAuthenticationHeader(t, maker, request, account.Owner)
+			},
 			buildStub: func(store *mockdb.MockStore) {
 				// build stub
 				store.EXPECT().
@@ -620,6 +715,9 @@ func TestDeleteAccount(t *testing.T) {
 		{
 			name:      "InvalidID",
 			accountID: account.ID,
+			authentication: func(maker token.Maker, request *http.Request) {
+				addAuthenticationHeader(t, maker, request, account.Owner)
+			},
 			buildStub: func(store *mockdb.MockStore) {
 				// build stub
 				store.EXPECT().
@@ -655,6 +753,9 @@ func TestDeleteAccount(t *testing.T) {
 			request, err := http.NewRequest(http.MethodDelete, url, nil)
 			require.NoError(t, err)
 
+			// add authentication
+			tc.authentication(server.tokenMaker, request)
+
 			// send the request to the server router, and response is record in the recorder
 			server.router.ServeHTTP(recorder, request)
 
@@ -664,10 +765,11 @@ func TestDeleteAccount(t *testing.T) {
 
 }
 
-func randomAccount() db.Account {
+func randomAccount(username string) db.Account {
+
 	return db.Account{
 		ID:       util.RandomInt(1, 1000),
-		Owner:    util.RandomUser(),
+		Owner:    username,
 		Balance:  util.RandomMoney(),
 		Currency: util.RandomCurrency(),
 	}
