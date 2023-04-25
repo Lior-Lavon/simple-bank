@@ -1,5 +1,6 @@
 postgres:
-	docker run --name simplebank --network bank_network -p 8080:8080 liorlavon/main-service:1.0.0
+	docker exec -it postgres12 --network bank_network -p 5432:5432 -e POSTGRES_USER=root -e POSTGRES_PASSWORD=secret -e POSTGRES_PASSWORD=secret -e POSTGRES_DB=simple_bank
+
 
 createdb:
 	docker exec -it postgres12 createdb --username=root --owner=root simple_bank
