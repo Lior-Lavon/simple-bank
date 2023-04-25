@@ -1,5 +1,7 @@
 project: https://www.youtube.com/playlist?list=PLy_6D98if3ULEtXtNSY_2qN21VCKgoQAE
 
+https://dev.to/techschoolguru/how-to-setup-github-actions-for-go-postgres-to-run-automated-tests-81o
+
 // create DB schema 
 https://dbdiagram.io
 
@@ -19,9 +21,20 @@ https://github.com/golang-migrate/migrate
 > createdb --username=root --owner=root simple_bank
 > dropdb simple_bank
 
-// manage DB from outside the shell using docker command
+// manage Postgre container from outside the shell using docker command
 > docker exec -it postgres12 createdb --username=root --owner=root simple_bank
 > docker exec -it postgres12 dropdb simple_bank
+
+// Docker Network
+docker container inspect [docker-id] // check the network setting of the container
+docker network ls // show existing docker networks
+docker network inspect bridge // inspect the 'bridge' network param for existing Containers
+
+// Create Network for containers
+docker network create [network_name] // create new docker network
+docker network connect [network_name] [container_name] // connect existing container to a network
+
+// If two containers are on the same network, they can connect to eachother by Container-Name
 
 // run migration from project folder
 > migrate -path ../db/migration -database "postgresql://root:secret@localhost:5432/simple_bank?sslmode=disable" -verbose up
