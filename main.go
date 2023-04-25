@@ -12,6 +12,10 @@ import (
 	"github.com/liorlavon/simplebank/web/api"
 )
 
+var (
+	count int64
+)
+
 func main() {
 
 	// read config
@@ -42,22 +46,22 @@ func main() {
 }
 
 func connectToDB(driverName, dataSourceName string) (*sql.DB, error) {
-
-	counter := 0
-
 	for {
-		fmt.Printf("counter = %d\n", counter)
-		if counter > 10 {
-			return nil, fmt.Errorf("failed to connect to db")
-		}
 		conn, err := sql.Open(driverName, dataSourceName)
 		if err != nil {
-			log.Fatal("failed to connect, try again .. ")
-			counter++
-			time.Sleep(time.Second)
-			continue
+			log.Println("Postgress not yet ready ...")
+			count++
+		} else {
+			fmt.Println("Connected to Postgre !!")
+			return conn, nil
 		}
-		fmt.Println("connect succesfull returning")
-		return conn, nil
+
+		if count > 10 {
+			//log.Panic("Exit connectionDB !!")
+			return nil, fmt.Errorf("failed to connect to db")
+		}
+
+		time.Sleep(2 * time.Second)
+		//		continue
 	}
 }
