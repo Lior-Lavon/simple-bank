@@ -1,6 +1,18 @@
 version: '3'
 
 services:
+
+  mainapp:
+    build:
+      context: ./../
+      dockerfile: main-service.dockerfile
+    restart: always
+    ports:
+      - "8080:8080"
+    deploy:
+      mode: replicated
+      replicas: 1
+
   postgres:
     container_name: 'postgres12'
     image: 'postgres:12-alpine'
