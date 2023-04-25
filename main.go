@@ -2,7 +2,9 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
+	"time"
 
 	_ "github.com/lib/pq" // postgres drive
 	db "github.com/liorlavon/simplebank/db/sqlc"
@@ -19,7 +21,7 @@ func main() {
 		return
 	}
 
-	conn, err := sql.Open(config.DBDriver, config.DBSource)
+	conn, err := connectToDB(config.DBDriver, config.DBSource)
 	if err != nil {
 		log.Fatal("cannot connect to db: ", err)
 		return
@@ -36,5 +38,26 @@ func main() {
 	if err != nil {
 		log.Fatal("cannot start the server: ", err)
 		return
+	}
+}
+
+func connectToDB(driverName, dataSourceName string) (*sql.DB, error) {
+
+	counter := 0
+
+	for {
+		fmt.Printf("counter = %d\n", counter)
+		if counter > 10 {
+			return nil, fmt.Errorf("failed to connect to db")
+		}
+		conn, err := sql.Open(driverName, dataSourceName)
+		if err != nil {
+			log.Fatal("failed to connect, try again .. ")
+			counter++
+			time.Sleep(time.Second)
+			continue
+		}
+		fmt.Println("connect succesfull returning")
+		return conn, nil
 	}
 }
