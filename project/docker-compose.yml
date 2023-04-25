@@ -12,6 +12,8 @@ services:
     deploy:
       mode: replicated
       replicas: 1
+    environment:
+      DSN: "host=postgres port=5432 user=root password=secret dbname=simple_bank sslmode=disable timezone=UTC connect_timeout=5"
     depends_on:
       postgres:
         condition: service_started      

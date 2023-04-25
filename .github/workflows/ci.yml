@@ -20,6 +20,7 @@ jobs:
     # Service containers to run with `container-job`
     services:           # specifiy a list of external services
       postgres:
+        container_name: postgres12
         image: postgres:12                 # Docker Hub image
         env:
           POSTGRES_USER: root
