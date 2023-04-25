@@ -816,11 +816,8 @@ func requierBodyMatchDeleteUserResponse(t *testing.T, body *bytes.Buffer, userna
 	}
 	err = json.Unmarshal(data, &response)
 	require.NoError(t, err)
-	t.Log("\response : ", response.Response)
 
 	expected := fmt.Sprintf("user %s deleted", username)
-	t.Log("\nexpected : ", expected)
-
 	// compare the input account and the returened account
 	require.Equal(t, expected, response.Response)
 }
