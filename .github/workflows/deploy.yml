@@ -1,21 +1,14 @@
-# This workflow will build docker image a Deploy to production
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
-
+---
 name: Build and Push Golang Image to AWS ECR
-
-#define the events that can trigger this workflow
-on: 
+on:
   push:
-    branches: [ "main" ] # Push to main branch
-
-# define the jpbs
-jobs:
-  
-  build: # job 1 build docker image
-    name: Build image
-    runs-on: ubuntu-latest
+    branches: [ main ]
     
-    # define the steps
+jobs:
+  build-and-push:
+    name: Build and Push to ECR
+    runs-on: ubuntu-latest
+
     steps:
     # checkout the code to the image
     - name: Checkout repo into Go module directory
@@ -36,7 +29,6 @@ jobs:
 
     # build docker image and push to ecr
     - name: Build, Tag, and Push the Image to Amazon ECR
-      # id: build-image
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         ECR_REPOSITORY: simplebank
@@ -44,5 +36,3 @@ jobs:
       run: |
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-      
-
