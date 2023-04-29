@@ -143,6 +143,7 @@ in account.go change oneof=USD EUR with currency
 // Git Hub Action to automaticly Build & Push docker images to ECR (Elastic Conrainer Registery)
 // Elastic Conrainer Registery is a managed docker container registery to store deploy and manage docker container images
 - In AWS create repository to store images
+Push code to Github - Build - Test - Docker - store in AWS
 
 
 
