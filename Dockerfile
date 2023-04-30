@@ -25,5 +25,5 @@ EXPOSE 8080
 # run db migration & start main app
 # the CMD param will be passed to the ENTRYPOINT script to to run the migration and start the app
 CMD ["/app/main"]
-# ENTRYPOINT [ "/app/start.sh" ] 
+ENTRYPOINT [ "/app/start.sh" ] 
 # result with : ENTRYPOINT [ "/app/start.sh", "/app/main" ]
