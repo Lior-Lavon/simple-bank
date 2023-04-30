@@ -11,11 +11,17 @@ dropdb:
 migrateup:
 	migrate -path ../db/migration -database "postgresql://root:secret@localhost:5432/simple_bank?sslmode=disable" -verbose up
 
+aws_migrateup:
+	migrate -path ../db/migration -database "postgresql://root:RRjZZB39FeX7XRwXCYyn@simple-bank.cagrmci8jrd8.eu-central-1.rds.amazonaws.com:5432/simple_bank" -verbose up
+
 migrateup1:
 	migrate -path ../db/migration -database "postgresql://root:secret@localhost:5432/simple_bank?sslmode=disable" -verbose up 1
 
 migratedown:
 	migrate -path ../db/migration -database "postgresql://root:secret@localhost:5432/simple_bank?sslmode=disable" -verbose down
+
+aws_migratedown:
+	migrate -path ../db/migration -database "postgresql://root:RRjZZB39FeX7XRwXCYyn@simple-bank.cagrmci8jrd8.eu-central-1.rds.amazonaws.com:5432/simple_bank" -verbose down
 
 migratedown1:
 	migrate -path ../db/migration -database "postgresql://root:secret@localhost:5432/simple_bank?sslmode=disable" -verbose down 1
