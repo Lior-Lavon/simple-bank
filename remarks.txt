@@ -202,3 +202,18 @@ TOKEN_SYMMETRIC_KEY=37672e772d7fa78e641f11a6c59078c5
 
 // Put this command into the deploy.yml to overide the app.env file before pushing the docker image
 aws secretsmanager get-secret-value --region eu-central-1 --secret-id simple_bank --query SecretString --output text | jq -r 'to_entries|map("\(.key)=\(.value)")|.[]' > app.env
+
+// after a new image was pushed to ECR, we want to check that the image connects to AWS RDS and use the production env as planned
+// Download the image to 'local' by 'copy uri' and run "docker pull [uri]" in the terminal
+// the ECR repo is private, so we need to login to ECR before pulling the image
+
+// Login to ECR
+aws ecr get-login-password \
+    --region <region> \
+| docker login \
+    --username AWS \
+    --password-stdin <aws_account_id>.dkr.ecr.<region>.amazonaws.com
+// replace <region> and <aws_account_id> with account info
+
+// Run the 'local' image
+docker run [uri]
