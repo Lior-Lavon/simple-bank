@@ -2,8 +2,8 @@
 FROM golang:1.20-alpine3.17 As builder
 WORKDIR /app
 COPY . .
-# RUN go build -o main main.go
-RUN env GOOS=linux GOARCH=arm64 go build -o main main.go
+RUN go build -o main main.go
+# RUN env GOOS=linux GOARCH=arm64 go build -o main main.go
 # install curl 
 RUN apk add curl
 # download the migrate and extract the binary image and run it before starting the API server
