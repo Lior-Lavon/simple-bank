@@ -64,5 +64,5 @@ up_build: build_main
 ## build_main: builds the main binary as a linux executable
 build_main:
 	@echo "Building main binary..."
-	cd ../ && env GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o ${MAIN_BINARY} .
+	cd ../ && env GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -o ${MAIN_BINARY} .
 	@echo "Done!"
