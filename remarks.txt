@@ -145,10 +145,21 @@ in account.go change oneof=USD EUR with currency
 - In AWS create repository to store images
 Push code to Github - Build - Test - Docker - store in AWS
 
+// RDS on AWS
+// Set Postgres/RDS instance on AWS
+// use Make aws_migrateup to populate the tables
 
+// Secrets manager on AWS
+// We need to replace the values in app.env with real production values
+// the values will be stored in Secrets vault
+// Using the github/Action deploy.yml , we will insert the values from AWS Secrets
+// So when we run the docker on AWS it will have all the production values
+// We will store the productionvalues in Secret Manager on aws
+// use OpenSSL generate 32 charecter secret
+openssl rand -hex 64 | head -c 32 // generate 64 byte string with only hex characters and take only the first 32 characters 
 
-
-
+aws secretsmanager describe-secret --region eu-central-1 --secret-id [NAME / ARN] 
+aws secretsmanager get-secret-value --region eu-central-1 --secret-id [NAME / ARN] --query SecretString
 
 
 
