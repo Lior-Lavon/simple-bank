@@ -27,6 +27,10 @@ jobs:
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
 
+    # load env variables from SecretsManager, populate the app.env file before building the image
+    - name: Load secrets and save to app.env
+      run: aws secretsmanager get-secret-value --region eu-central-1 --secret-id simple_bank --query SecretString --output text | jq -r 'to_entries|map("\(.key)=\(.value)")|.[]' > app.env
+
     # build docker image and push to ecr
     - name: Build, Tag, and Push the Image to Amazon ECR
       env:

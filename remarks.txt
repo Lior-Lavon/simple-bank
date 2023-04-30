@@ -159,7 +159,46 @@ Push code to Github - Build - Test - Docker - store in AWS
 openssl rand -hex 64 | head -c 32 // generate 64 byte string with only hex characters and take only the first 32 characters 
 
 aws secretsmanager describe-secret --region eu-central-1 --secret-id [NAME / ARN] 
-aws secretsmanager get-secret-value --region eu-central-1 --secret-id [NAME / ARN] --query SecretString
+aws secretsmanager get-secret-value --region eu-central-1 --secret-id [NAME / ARN] --query SecretString --output text
+// Now we need to store this result into the app.env file 
+// we will use ./jq app to convert to json
+// to verify installation run : js --version
+
+aws secretsmanager get-secret-value --region eu-central-1 --secret-id simple_bank --query SecretString --output text | jq 'to_entries'
+Result:
+[
+  {
+    "key": "DB_SOURCE",
+    "value": "postgresql://root:RRjZZB39FeX7XRwXCYyn@simple-bank.cagrmci8jrd8.eu-central-1.rds.amazonaws.com:5432/simple_bank"
+  },
+  {
+    "key": "DB_DRIVER",
+    "value": "postgres"
+  },
+  {
+    "key": "SERVER_ADDRESS",
+    "value": "0.0.0.0:8080"
+  },
+  {
+    "key": "ACCESS_TOKEN_DURATION",
+    "value": "15m"
+  },
+  {
+    "key": "TOKEN_SYMMETRIC_KEY",
+    "value": "37672e772d7fa78e641f11a6c59078c5"
+  }
+]
 
 
+// Now we need to itterate on each one and transform them into Key/Value pairs in app.env
+// Get both Key/Value and format the output to be similar to app.env format
+aws secretsmanager get-secret-value --region eu-central-1 --secret-id simple_bank --query SecretString --output text | jq -r 'to_entries|map("\(.key)=\(.value)")|.[]'
+Result :
+DB_SOURCE=postgresql://root:RRjZZB39FeX7XRwXCYyn@simple-bank.cagrmci8jrd8.eu-central-1.rds.amazonaws.com:5432/simple_bank
+DB_DRIVER=postgres
+SERVER_ADDRESS=0.0.0.0:8080
+ACCESS_TOKEN_DURATION=15m
+TOKEN_SYMMETRIC_KEY=37672e772d7fa78e641f11a6c59078c5
 
+// Put this command into the deploy.yml to overide the app.env file before pushing the docker image
+aws secretsmanager get-secret-value --region eu-central-1 --secret-id simple_bank --query SecretString --output text | jq -r 'to_entries|map("\(.key)=\(.value)")|.[]' > app.env
