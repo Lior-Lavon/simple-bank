@@ -1,5 +1,4 @@
-# ---
-# Lior Lavon
+---
 name: Build and Push Golang Image to AWS ECR
 on:
   push:
