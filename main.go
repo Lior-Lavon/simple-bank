@@ -25,6 +25,8 @@ func main() {
 		return
 	}
 
+	printConfig(config)
+
 	conn, err := connectToDB(config.DBDriver, config.DBSource)
 	if err != nil {
 		log.Fatal("cannot connect to db: ", err)
@@ -64,4 +66,12 @@ func connectToDB(driverName, dataSourceName string) (*sql.DB, error) {
 		time.Sleep(2 * time.Second)
 		//		continue
 	}
+}
+
+func printConfig(config util.Config) {
+	log.Printf("DB_DRIVER: %s\n", config.DBDriver)
+	log.Printf("DB_SOURCE: %s\n", config.DBSource)
+	log.Printf("SERVER_ADDRESS: %s\n", config.ServerAddress)
+	log.Printf("TOKEN_SYMMETRIC_KEY: %s\n", config.TokenSymmetricKey)
+	log.Printf("ACCESS_TOKEN_DURATION: %s\n", config.AccessTokenDuration)
 }
