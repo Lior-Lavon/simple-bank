@@ -214,9 +214,12 @@ aws ecr get-login-password \
     --username AWS \
     --password-stdin <aws_account_id>.dkr.ecr.<region>.amazonaws.com
 
-aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 354885450543.dkr.ecr.us-east-1.amazonaws.com
-    
+aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin 354885450543.dkr.ecr.eu-central-1.amazonaws.com    
 // replace <region> and <aws_account_id> with account info
 
-// Run the 'local' image
-docker run [uri]
+// The app.env is loaded when the app starts, but the $DB_SOURCE is alos used when the container boots and run migrate but the $DB_SOURCE is empty
+// from the terminal , echo $DB_SOURCE is empty
+// Therfore we need to load the variables from app.env to the current shell as enviroment variables
+// call: 'source app.env' to load the variables to the shell as enviroment variables
+// now calling 'echo $DB_SOURCE' echo the value from env variables.
+// Copy the 'source app.env' command to the start.sh file before we call db-migrate command and adjust its location to: /app/app.env
