@@ -1,0 +1,22 @@
+# manual deployment : kubectl apply -f eks/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: simple-bank-api-deployment-k8s
+  labels:
+    app: simple-bank-api
+spec:
+  replicas: 2             # number of pods running same template
+  selector:              
+    matchLabels:
+      app: simple-bank-api
+  template:
+    metadata:
+      labels:
+        app: simple-bank-api
+    spec:
+      containers:
+      - name: simple-bank-api
+        image: 354885450543.dkr.ecr.eu-central-1.amazonaws.com/simplebank:557bb6ec31e39eb3f35232fbd5cb5bc1eb2751dd
+        ports:
+        - containerPort: 8080

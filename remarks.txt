@@ -223,3 +223,43 @@ aws ecr get-login-password --region eu-central-1 | docker login --username AWS -
 // call: 'source app.env' to load the variables to the shell as enviroment variables
 // now calling 'echo $DB_SOURCE' echo the value from env variables.
 // Copy the 'source app.env' command to the start.sh file before we call db-migrate command and adjust its location to: /app/app.env
+
+
+// AWS EKS 
+// Elastic Kubernetes Service,  Container orchestration engin
+// Fully managed Kubernetes control plane
+
+// Connect to EKS using 'Cubectl' & 'k9s' tools
+// Install Cubectl: https://kubernetes.io/docs/tasks/tools/
+// https://kubernetes.io/docs/tasks/tools/install-kubectl-macos/#install-with-homebrew-on-macos
+// Watch chepter 31
+
+// Tool : k9s, https://k9scli.io
+// Kubernetes CLI To Manage Your Clusters In Style!
+// UI tool to manage the k8 cluster
+// Install via: 'brew install derailed/k9s/k9s'
+// Start type 'k9s'
+// Commands
+// Switch namespace => : ns 
+// List all services => : service
+// List all pods => : pods
+// List all krobjobs => : cj 
+// List all nodes => : nodes
+// <ctrl-d> Delete resource
+// <d> describe resource
+// List ConfigMaps => : configmap
+
+// Deploy web app to K8 on aws
+// Create a deployment // description of how we want our container to be deployed
+https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
+// in the eks folder , create a file deployment.yaml
+Deploy => 'kubectl apply -f eks/deployment.yaml'
+// when the service is running, we still Cant connect to the pod becouse the IP is private
+// So we need to deploy a Service => https://kubernetes.io/docs/concepts/services-networking/service/
+// create a file eks/service.yaml and add the configuration
+// to set the external IP: add 'type: LoadBalancer' in the eks/service.yaml config file
+// to apply the service config by calling : 'kubectl apply -f eks/service.yaml'
+// to check the external IP, run : 'nslookup [external_ip]'
+
+
+

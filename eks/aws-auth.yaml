@@ -1,0 +1,14 @@
+# this file was dun manyally on the cli profile
+# see chapter 31
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aws-auth
+  namespace: kube-system
+data:
+  mapUsers: |
+    - userarn: arn:aws:iam::354885450543:user/github-ci
+      username: github-ci
+      groups:
+        - system:masters
+
