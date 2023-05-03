@@ -1,0 +1,14 @@
+# this config defines the network to the outside world
+# Deploy: 'kubectl apply -f eks/service.yaml'
+apiVersion: v1
+kind: Service
+metadata:
+  name: simple-bank-api-service
+spec:
+  selector:
+    app: simple-bank-api
+  ports:
+    - protocol: TCP
+      port: 80            # external incoming request
+      targetPort: 8080    # internal port of the container
+  type: LoadBalancer      # defines as LB to receive external IP, not by default 
