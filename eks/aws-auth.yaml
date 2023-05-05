@@ -1,5 +1,6 @@
-# this file was dun manyally on the cli profile
+# give permission to the github-ci profile to access EKS
 # see chapter 31
+# manual deployment : kubectl apply -f eks/aws-auth.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:

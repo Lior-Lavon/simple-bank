@@ -1,0 +1,29 @@
+# manage the routing the APIs to different services
+# Deploy: 'kubectl apply -f eks/ingress.yaml'
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: simple-bank-ingress
+spec:
+  rules:                    # defines routing rules
+  - host: "liorlavon.me"
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: simple-bank-api-service
+            port:
+              number: 80
+  # second routing rule - not needed at the moment
+  # - host: "*.foo.com"
+  #   http:
+  #     paths:
+  #     - pathType: Prefix
+  #       path: "/foo"
+  #       backend:
+  #         service:
+  #           name: service2
+  #           port:
+  #             number: 80

@@ -229,10 +229,32 @@ aws ecr get-login-password --region eu-central-1 | docker login --username AWS -
 // Elastic Kubernetes Service,  Container orchestration engin
 // Fully managed Kubernetes control plane
 
-// Connect to EKS using 'Cubectl' & 'k9s' tools
-// Install Cubectl: https://kubernetes.io/docs/tasks/tools/
+// kubectl
+// Connect to EKS using 'kubectl' & 'k9s' tools
+// Install kubectl: https://kubernetes.io/docs/tasks/tools/
 // https://kubernetes.io/docs/tasks/tools/install-kubectl-macos/#install-with-homebrew-on-macos
 // Watch chepter 31
+
+// Cubectl Commands
+kubectl version --client // print version
+kubectl version --client --output=json
+kubectl cluster-info                      // verify & connect to the aws EKS cluster
+// config is stored in '~/.kube/config'
+
+// fetch the aws EKS cluster information and store result in '~/.kube/config'
+aws eks update-kubeconfig --name [simple-bank] --region [region]
+
+// In case on multiple eks clusters in ~/.kube/config ,we can switch to the relevant context with :
+kubectl config use-context [arn:... of cluster]
+
+// switch cli-user between profiles, and give cli user access to kubectl
+export AWS_PROFILE=github
+export AWS_PROFILE=default
+
+kubectl get service 
+kubectl get pods
+
+
 
 // Tool : k9s, https://k9scli.io
 // Kubernetes CLI To Manage Your Clusters In Style!
@@ -241,13 +263,14 @@ aws ecr get-login-password --region eu-central-1 | docker login --username AWS -
 // Start type 'k9s'
 // Commands
 // Switch namespace => : ns 
+// List ConfigMaps => : configmap
 // List all services => : service
 // List all pods => : pods
 // List all krobjobs => : cj 
 // List all nodes => : nodes
+// List all ingress => : ingress
 // <ctrl-d> Delete resource
 // <d> describe resource
-// List ConfigMaps => : configmap
 
 // Deploy web app to K8 on aws
 // Create a deployment // description of how we want our container to be deployed
@@ -260,6 +283,26 @@ Deploy => 'kubectl apply -f eks/deployment.yaml'
 // to set the external IP: add 'type: LoadBalancer' in the eks/service.yaml config file
 // to apply the service config by calling : 'kubectl apply -f eks/service.yaml'
 // to check the external IP, run : 'nslookup [external_ip]'
+
+// Register a domain
+// now we have setup the k8s service to expose external IP , next we should connect it to a Domain registry using A record
+// we can use aws service Route53 to register a domain, but liorlavon.me is registered in Godaddy so i will use it and route to a DNS on Route53
+
+
+// Ingress / K8S
+// setup routing rules for multiple services and enable TOS to secure all API service
+// Ingress handle LoadBalancer and SSL , so setting https is easy
+// Ingress expose http/https from outside to a specific webservice based on rule-set
+https://kubernetes.io/docs/concepts/services-networking/ingress/
+
+- In 'eks/service.yaml' change the exposure of the service from LoadBalancer to ClusterIP to remove the external exposure
+- create eks/ingress.yaml file
+
+// Configuring external address to the ingress
+// we need to setup the A record to route incoming traffic to the ingress, by deploying 'Ingress Controller'
+https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/
+// we will install the 'nginx ingress controllers', follow the link in the documentation
+
 
 
 
