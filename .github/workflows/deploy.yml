@@ -46,7 +46,7 @@ jobs:
         IMAGE_TAG: ${{ github.sha }}
       run: |        # | : run multiple commands
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -t latest .
-        docker push -a $ECR_REGISTRY/$ECR_REPOSITORY
+        docker push -a $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
     - name: Deploy image to EKS
       run: |
