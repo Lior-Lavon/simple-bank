@@ -336,7 +336,15 @@ https://cert-manager.io/docs/installation/kubectl/
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt     # refer to the cluster issuer name in issuer.yaml
 
-# Github Action, auto Deploy docker images to K8S
+# Github Action, auto Deploy docker images from ECS to ECR
+# so far we created yaml files in /eks folder and deployed them manually
+# to automate the process :
+# install 'kubectl' in Github-Action
+  # find 'Kubectl tool installer' in github marketplace
+  # add the code snipit to .github/.../deploy.yml file
+# in the deploy.yaml change the build process to add the tag latest on each new build
+# in the deploy.yaml add a last step 'Deploy image to EKS' and invoke Kubectl actions from /eks folder
+
 
 
 

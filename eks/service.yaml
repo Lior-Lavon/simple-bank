@@ -1,4 +1,4 @@
-# Service defines the network to the outside world to the Pods
+# Service defines the network from the outside world to the Pods
 # Deploy: 'kubectl apply -f eks/service.yaml'
 apiVersion: v1
 kind: Service
