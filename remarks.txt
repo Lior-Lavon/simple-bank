@@ -271,6 +271,10 @@ kubectl get pods
 // List all ingress => : ingress
 // <ctrl-d> Delete resource
 // <d> describe resource
+// :clusterissuer
+// :secret  => to find the private-key of the issuer
+// :certificates 
+// :certificaterequests
 
 // Deploy web app to K8 on aws
 // Create a deployment // description of how we want our container to be deployed
@@ -290,18 +294,51 @@ Deploy => 'kubectl apply -f eks/deployment.yaml'
 
 
 // Ingress / K8S
-// setup routing rules for multiple services and enable TOS to secure all API service
-// Ingress handle LoadBalancer and SSL , so setting https is easy
+// setup single A record and define miltiple rules in the ingress/config file to route traffic to different services
+// Ingress will also handle LoadBalancing and SSL termination, so supporting https is easy
 // Ingress expose http/https from outside to a specific webservice based on rule-set
 https://kubernetes.io/docs/concepts/services-networking/ingress/
 
 - In 'eks/service.yaml' change the exposure of the service from LoadBalancer to ClusterIP to remove the external exposure
 - create eks/ingress.yaml file
+- include the ingressClass object in the ingress script
 
 // Configuring external address to the ingress
 // we need to setup the A record to route incoming traffic to the ingress, by deploying 'Ingress Controller'
 https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/
 // we will install the 'nginx ingress controllers', follow the link in the documentation
+
+# Update Ingress to enable SSL / TLS / https 
+# the login request of the cliet to the k8s/80 is over plain http connection, this is not good becouse the user credentials can be stolen in the middle of the request
+# to secure the connection we will add Free TLS certificate for K8S
+# we will use 'cert manager' to automaticly generate and renue the certificate
+https://cert-manager.io
+# ACME protocol : Autoated Certificate Managment Enviroment
+# we will follow the HTTP-01 challange to create the certificate
+# but if we have multiple services , implement the DNS-01 challange
+
+# Implementation:
+# from cert-manager site, install sert-manager addon for k8s cluster
+https://cert-manager.io/docs/installation/kubectl/
+# a new namespace 'cert-manager' is added to k8s , see :ns
+# Verify installation: kubectl get pods --namespace cert-manager
+# Next we will config & deploy a certificate issuer to the cluster
+# we use ACME protocol, create a new file eks/issuer.yaml
+# deploy the script to the k8s, in k9s check :clusterissuers 
+# Result: 'The ACME account was registered with the ACME server'
+
+# to find the cert-manager private-key of the ceritifcate, use :secret
+# result : letsencrypt-account-private-key
+
+# at this point both :certificates and :certificaterequests list are both empty
+# becouse we havent attached the issuer to Ingress yet
+# to attach the issuer to the Ingress , in Ingress.yaml, under the metadata section of the ingress add annotation section
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt     # refer to the cluster issuer name in issuer.yaml
+
+# Github Action, auto Deploy docker images to K8S
+
+
 
 
 

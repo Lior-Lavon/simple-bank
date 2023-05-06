@@ -1,29 +1,37 @@
-# manage the routing the APIs to different services
+# ingress manage the routing the APIs to different services
 # Deploy: 'kubectl apply -f eks/ingress.yaml'
+
+# IngressClass defines the ingress class
+apiVersion: networking.k8s.io/v1
+kind: IngressClass
+metadata:
+  name: nginx
+spec:
+  controller: k8s.io/ingress-nginx
+
+---
+
+# Ingress
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: simple-bank-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt     # refer to the cluster issuer name in issuer.yaml
 spec:
-  rules:                    # defines routing rules
-  - host: "liorlavon.me"
+  ingressClassName: nginx       # reference the IngressClass defines above
+  rules:                        # defines routing rules
+  - host: "api.liorlavon.me"
     http:
       paths:
       - pathType: Prefix
-        path: "/"
+        path: "/"               # route all request from api.liorlavon.me to this service
         backend:
           service:
             name: simple-bank-api-service
             port:
               number: 80
-  # second routing rule - not needed at the moment
-  # - host: "*.foo.com"
-  #   http:
-  #     paths:
-  #     - pathType: Prefix
-  #       path: "/foo"
-  #       backend:
-  #         service:
-  #           name: service2
-  #           port:
-  #             number: 80
+  tls:            # defines the domain name and where to store each certificate
+  - hosts:        # domain name
+    - api.liorlavon.me
+    secretName: simple-bank-api-cert   # the secret will be stored in a certificate with this name

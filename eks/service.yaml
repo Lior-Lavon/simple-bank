@@ -11,5 +11,6 @@ spec:
     - protocol: TCP
       port: 80            # external incoming request
       targetPort: 8080    # internal port of the container
-  type: LoadBalancer      # defines as LB to receive external IP, not by default 
+#  type: LoadBalancer      # expose as a load balancer and external IP, to receive external requests (not by default)
 #  type: ClusterIP         # this service will not be exposed to outside world and will not have external IP
+#  type: NodePort
