@@ -19,6 +19,6 @@ spec:
       containers:
       - name: simple-bank-api
         image: 354885450543.dkr.ecr.eu-central-1.amazonaws.com/simplebank:latest
-        imagePullPolicy: Always   # ensure that K*S will always pull the latest image from ECR, before deploying new containers
+        imagePullPolicy: Always   # ensure that K8S will always pull the Latest image from ECR, before deploying new containers
         ports:
         - containerPort: 8080

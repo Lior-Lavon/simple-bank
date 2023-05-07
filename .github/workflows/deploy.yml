@@ -45,14 +45,22 @@ jobs:
         ECR_REPOSITORY: simplebank
         IMAGE_TAG: ${{ github.sha }}
       run: |
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -t latest .
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
         docker push -a $ECR_REGISTRY/$ECR_REPOSITORY
 
-    # build docker image and push to ecr
-    - name: Build, Tag, and Push the Image to Amazon ECR
+    - name: Update Kube config
+      run: aws eks update-kubeconfig --name simple-bank --region eu-central-1
+
+    # deploy image to EKS
+    - name: Deploy image to EKS
       run: |
+# deploy aws-auth resource to give users access to the cluster      
         kubectl apply -f eks/aws-auth.yaml 
+# deploy deployment resource to deploy the 'latest' container version
         kubectl apply -f eks/deployment.yaml
+# deploy service resource to deploy service to the cluster
         kubectl apply -f eks/service.yaml
+# deploy issuer resource to manage the TLS certificate
         kubectl apply -f eks/issuer.yaml
+# deploy ingress resource to define the routing rules to the internal simple-bank service
         kubectl apply -f eks/ingress.yaml
