@@ -1,3 +1,4 @@
+# deploy issuer resource to manage the TLS certificate
 # run : kubectl apply -f eks/issuer.yaml
 apiVersion: cert-manager.io/v1
 kind: ClusterIssuer

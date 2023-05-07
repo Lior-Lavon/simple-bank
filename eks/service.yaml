@@ -1,3 +1,4 @@
+# deploy service resource to deploy service to the cluster
 # Service defines the network from the outside world to the Pods
 # Deploy: 'kubectl apply -f eks/service.yaml'
 apiVersion: v1
