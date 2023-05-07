@@ -1,3 +1,4 @@
+# deploy ingress resource to define the routing rules to the internal simple-bank service
 # ingress manage the routing the APIs to different services
 # Deploy: 'kubectl apply -f eks/ingress.yaml'
 

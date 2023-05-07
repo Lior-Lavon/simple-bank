@@ -51,7 +51,6 @@ jobs:
     - name: Update Kube config
       run: aws eks update-kubeconfig --name simple-bank --region eu-central-1
 
-    # deploy image to EKS
     - name: Deploy image to EKS
       run: |
 # deploy aws-auth resource to give users access to the cluster      

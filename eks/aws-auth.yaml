@@ -1,3 +1,4 @@
+# deploy aws-auth resource to give users access to the cluster      
 # give permission to the github-ci profile to access EKS
 # see chapter 31
 # manual deployment : kubectl apply -f eks/aws-auth.yaml
