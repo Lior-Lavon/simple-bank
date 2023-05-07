@@ -50,16 +50,3 @@ jobs:
 
     - name: Update Kube config
       run: aws eks update-kubeconfig --name simple-bank --region eu-central-1
-
-    - name: Deploy image to EKS
-      run: |
-# deploy aws-auth resource to give users access to the cluster      
-        kubectl apply -f eks/aws-auth.yaml 
-# deploy deployment resource to deploy the 'latest' container version
-        kubectl apply -f eks/deployment.yaml
-# deploy service resource to deploy service to the cluster
-        kubectl apply -f eks/service.yaml
-# deploy issuer resource to manage the TLS certificate
-        kubectl apply -f eks/issuer.yaml
-# deploy ingress resource to define the routing rules to the internal simple-bank service
-        kubectl apply -f eks/ingress.yaml
