@@ -13,9 +13,8 @@ https://github.com/golang-migrate/migrate
 > migrate -version // v4.15.2
 > create ./db/migration folders
 // create migration
-> migrate create -ext sql -dir db/migration -seq init_schema // migration_name
+> migrate create -ext sql -dir db/migration -seq <migration_name> // migration_name
 // -seq = sequential version number
-// init_schema = [migration_name]
 
 // create db from inside the shell 
 > createdb --username=root --owner=root simple_bank
@@ -344,6 +343,19 @@ https://cert-manager.io/docs/installation/kubectl/
   # add the code snipit to .github/.../deploy.yml file
 # in the deploy.yaml change the build process to add the tag latest on each new build
 # in the deploy.yaml add a last step 'Deploy image to EKS' and invoke Kubectl actions from /eks folder
+
+
+# Advanced Topics
+
+# Refresh Token: used with longer time expiration, to refrash the main token
+access_token is for 10 - 15 minutes
+refresh_token is for 1 - 7 days
+The refresh_token should be stored in the session table in the database, with is_blokked filed
+and the ability to revoke the refresh_token if needed.
+
+We want to add a refrash_token in the login response with a longer duration
+
+
 
 
 

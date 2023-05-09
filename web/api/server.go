@@ -56,6 +56,9 @@ func (server *Server) setupRoute() *gin.Engine {
 	router.POST("/api/v1/users/login", server.loginUser)
 	router.POST("/api/v1/users", server.createUser)
 
+	// token renew access
+	router.POST("/api/v1/token/renew_access", server.renewAccessToken)
+
 	// add all routes that have common middlewares or the same group router.
 	authGroup := router.Group("/").Use(authMiddleware(server.tokenMaker))
 

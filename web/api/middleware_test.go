@@ -20,8 +20,9 @@ func addAuthorization(t *testing.T,
 	duration time.Duration) {
 
 	// create token
-	token, err := tokenMaker.CreateToken(username, duration)
+	token, payload, err := tokenMaker.CreateToken(username, duration)
 	require.NoError(t, err)
+	require.NotEmpty(t, payload)
 
 	// for mat autohrizationHeader "bearer token"
 	authorizationHeader := fmt.Sprintf("%s %s", authorizationType, token)
