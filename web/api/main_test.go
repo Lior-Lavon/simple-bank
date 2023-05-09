@@ -37,7 +37,7 @@ func newTestServer(t *testing.T, store db.Store) *Server {
 
 // addAuthenticationHeader ass "Bearer token" to header
 func addAuthenticationHeader(t *testing.T, maker token.Maker, request *http.Request, username string) {
-	token, err := maker.CreateToken(username, time.Minute)
+	token, _, err := maker.CreateToken(username, time.Minute)
 	require.NoError(t, err)
 
 	authorization := fmt.Sprintf("%s %s", authorizationTypeBearer, token)

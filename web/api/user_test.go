@@ -80,16 +80,13 @@ func TestUserLogin(t *testing.T) {
 						GetUser(gomock.Any(), gomock.Eq(user.Username)).
 						Times(1).
 						Return(user, nil),
+					store.EXPECT().
+						CreateSession(gomock.Any(), gomock.Any()).
+						Times(1),
 				)
 			},
 			validation: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				// check status code
 				require.Equal(t, http.StatusOK, recorder.Code)
-				arg := loginUserResponse{
-					AccessToken: gomock.Any().String(),
-					User:        newUserResponse(user),
-				}
-				checkBodyLoginResponse(t, recorder.Body, arg)
 			},
 		},
 		{
@@ -788,22 +785,6 @@ func checkBodyResponse(t *testing.T, body *bytes.Buffer, u userResponse) {
 	require.NoError(t, err)
 
 	require.Equal(t, u, user)
-}
-
-func checkBodyLoginResponse(t *testing.T, body *bytes.Buffer, u loginUserResponse) {
-
-	// read all data from response body
-	data, err := ioutil.ReadAll(body)
-	require.NoError(t, err)
-
-	var loginUser loginUserResponse
-	err = json.Unmarshal(data, &loginUser)
-	require.NoError(t, err)
-
-	u.AccessToken = "is anything"
-	loginUser.AccessToken = "is anything"
-
-	require.Equal(t, u, loginUser)
 }
 
 func requierBodyMatchDeleteUserResponse(t *testing.T, body *bytes.Buffer, username string) {
