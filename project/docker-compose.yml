@@ -17,19 +17,19 @@ services:
     volumes:
       - ./db-data/postgres/:/var/lib/postgresql/data/
 
-  api:
-    build: 
-      context: ../
-      dockerfile: Dockerfile
-    ports:
-      - "8080:8080"
-    environment:
-      - DB_SOURCE=postgresql://root:secret@postgres:5432/simple_bank?sslmode=disable
-    restart: always    
-    deploy:
-      mode: replicated
-      replicas: 1
-    depends_on:
-      postgres:
-        condition: service_started
+  # api:
+  #   build: 
+  #     context: ../
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "8080:8080"
+  #   environment:
+  #     - DB_SOURCE=postgresql://root:secret@postgres:5432/simple_bank?sslmode=disable
+  #   restart: always    
+  #   deploy:
+  #     mode: replicated
+  #     replicas: 1
+  #   depends_on:
+  #     postgres:
+  #       condition: service_started
 

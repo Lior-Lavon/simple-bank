@@ -263,8 +263,8 @@ func (s *Server) loginUser(ctx *gin.Context) {
 		ID:           refreshPayload.ID,
 		Username:     request.Username,
 		RefreshToken: refreshToken,
-		UserAgent:    "", // TODO: fill it later
-		ClientIp:     "", // TODO: fill in later
+		UserAgent:    ctx.Request.UserAgent(), // exist in the gin framework
+		ClientIp:     ctx.ClientIP(),          // exist in the gin framework
 		IsBlocked:    false,
 		ExpiresAt:    refreshPayload.ExpiredAt,
 	}
