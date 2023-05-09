@@ -1,6 +1,8 @@
+LOCAL_DB_URL=postgresql://root:secret@localhost:5432/simple_bank?sslmode=disable
+AWS_DB_URL=postgresql://root:RRjZZB39FeX7XRwXCYyn@simple-bank.cagrmci8jrd8.eu-central-1.rds.amazonaws.com:5432/simple_bank
+
 postgres:
 	docker exec -it postgres12 --network bank_network -p 5432:5432 -e POSTGRES_USER=root -e POSTGRES_PASSWORD=secret -e POSTGRES_PASSWORD=secret -e POSTGRES_DB=simple_bank
-
 
 createdb:
 	docker exec -it postgres12 createdb --username=root --owner=root simple_bank
@@ -9,22 +11,28 @@ dropdb:
 	docker exec -it postgres12 dropdb simple_bank
 
 migrateup:
-	migrate -path ../db/migration -database "postgresql://root:secret@localhost:5432/simple_bank?sslmode=disable" -verbose up
+	migrate -path ../db/migration -database "$(LOCAL_DB_URL)" -verbose up
 
 aws_migrateup:
-	migrate -path ../db/migration -database "postgresql://root:RRjZZB39FeX7XRwXCYyn@simple-bank.cagrmci8jrd8.eu-central-1.rds.amazonaws.com:5432/simple_bank" -verbose up
+	migrate -path ../db/migration -database "$(AWS_DB_URL)" -verbose up
 
 migrateup1:
-	migrate -path ../db/migration -database "postgresql://root:secret@localhost:5432/simple_bank?sslmode=disable" -verbose up 1
+	migrate -path ../db/migration -database "$(LOCAL_DB_URL)" -verbose up 1
 
 migratedown:
-	migrate -path ../db/migration -database "postgresql://root:secret@localhost:5432/simple_bank?sslmode=disable" -verbose down
+	migrate -path ../db/migration -database "$(LOCAL_DB_URL)" -verbose down
 
 aws_migratedown:
-	migrate -path ../db/migration -database "postgresql://root:RRjZZB39FeX7XRwXCYyn@simple-bank.cagrmci8jrd8.eu-central-1.rds.amazonaws.com:5432/simple_bank" -verbose down
+	migrate -path ../db/migration -database "$(AWS_DB_URL)" -verbose down
 
 migratedown1:
-	migrate -path ../db/migration -database "postgresql://root:secret@localhost:5432/simple_bank?sslmode=disable" -verbose down 1
+	migrate -path ../db/migration -database "$(LOCAL_DB_URL)" -verbose down 1
+
+db_docs:
+	cd ../ && dbdocs build doc/db.dbml
+
+db_schema:
+	cd ../ && dbml2sql --postgres -o doc/schema.sql doc/db.dbml 
 
 sqlc:
 	cd ../db && sqlc generate

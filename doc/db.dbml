@@ -1,0 +1,74 @@
+Project simple_bank {
+  database_type: 'PostgreSQL'
+  Note: '''
+    # Simple Bank Database
+  '''
+}
+Table accounts as A {
+  id bigserial [pk]                                   // autoincrement / primary key
+  owner varchar [not null, ref: > U.username]
+  balance bigint [not null]
+  currency varchar [not null]
+  created_at timestamptz [not null, default: `now()`] // set automaticly
+
+  Indexes {
+    owner
+    // composit
+    (owner, currency) [unique] // each set of [ owner - currency ] must be unique
+  }
+}
+
+// All transactions of a single account
+Table entries {
+  id bigserial [pk]                         // autoincrement / primary key
+  account_id bigint [ref: > A.id, not null]           // reference accounts.id
+  amount bigint [not null, note: 'can be positive or negative'] // amount of +/- $
+  created_at timestamptz [not null, default: `now()`] // set automaticly
+
+  Indexes {
+    account_id
+  }
+}
+
+// transfers between accounts (in Simple Bank)
+Table transfers {
+  id bigserial [pk]                         // autoincrement / primary key
+  from_account_id bigint [ref: > A.id, not null]      // From account, reference accounts.id
+  to_account_id bigint [ref: > A.id, not null]        // To account, reference accounts.id
+  amount bigint [not null, note: 'must be positive']                  // amount must be positive
+  created_at timestamptz [not null, default: `now()`] // set automaticly
+
+  Indexes {
+    from_account_id
+    to_account_id
+    (from_account_id, to_account_id)
+  }
+
+}
+
+Table users as U {
+  username varchar [pk]
+  hashed_password varchar [not null]
+  firstname varchar [not null]
+  lastname varchar [not null]
+  email varchar [unique, not null]
+  password_changed_at timestamptz [not null, default: '0001-01-01 00:00:00Z']
+  created_at timestamptz [not null, default: `now()`] // set automaticly
+  
+  Indexes {
+    firstname
+    lastname
+    email 
+  }
+}
+
+Table sessions as S {
+  id uuid [pk]
+  username varchar [ref: > U.username, not null]
+  refresh_token varchar [not null]
+  user_agent varchar [not null]
+  client_ip varchar [not null]
+  is_blocked boolean [not null, default: false]
+  expired_at timestamptz [not null]
+  created_at timestamptz [not null, default: `now()`] // set automaticly
+}
