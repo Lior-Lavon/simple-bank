@@ -355,7 +355,19 @@ and the ability to revoke the refresh_token if needed.
 
 We want to add a refrash_token in the login response with a longer duration
 
+# Create DB documentation and SQL
+https://dbdocs.io/?utm_source=dbdiagram
 
+Dependencies :
+Install NodeJS & NPM
+
+install dbdocs
+> npm install -g dbdocs
+https://dbdocs.io/liorlavon554
+
+# dbml (Generating sql dump file)
+https://dbml.dbdiagram.io/home/?utm_source=dbdocs
+Install > npm install -g @dbml/cli
 
 
 
