@@ -1,0 +1,18 @@
+// we will use protobuf v3 to define messages
+syntax = "proto3";
+
+package pb;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/liorlavon/simplebank/pb";
+// the generated code will go into the /pb folder
+
+message User {
+	string username = 1;
+	string first_name = 2;
+	string last_name = 3;
+	string email = 4;
+	google.protobuf.Timestamp password_changed_at = 5;
+	google.protobuf.Timestamp created_at = 6;
+}

@@ -1,0 +1,21 @@
+# gRPC 
+# Enable fast comunication between microservices and accros data centers
+# 'Protobuf' is a Protocol Buffers, used to encode structure data
+https://grpc.io/docs/languages/go/quickstart/
+
+Installation:
+$ brew install protobuf
+$ protoc --version  # Ensure compiler version is 3+
+
+# For Go support, install the following libs:
+> go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
+> go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
+
+The Example will include :
+protobuf definision for two API'S
+- create new user
+- login user to get access and refresh tokens
+
+VSC Plugin:
+- 'vscode-proto3' // syntax highlighting
+
