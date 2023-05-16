@@ -1,0 +1,17 @@
+// Declare gRPC service and add the RPC definishion of that api
+
+syntax = "proto3";
+
+package pb;
+
+import "rpc_create_user.proto";
+import "rpc_login_user.proto";
+
+option go_package = "github.com/liorlavon/simplebank/pb";
+
+// Define gRPC API to create new user
+service SimpleBank {
+    rpc CreateUser(CreateUserRequest) returns (CreateUserResponse){}
+    rpc LoginUser(LoginUserRequest) returns (LoginUserResponse){}
+}
+

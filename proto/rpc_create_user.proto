@@ -1,0 +1,23 @@
+// we will use protobuf v3 to define messages
+syntax = "proto3";
+
+package pb;
+
+import "user.proto";
+
+option go_package = "github.com/liorlavon/simplebank/pb";
+// the generated code will go into the /pb folder
+
+// here we define the response and data stracture of the API
+
+message CreateUserRequest { 
+	string username = 1;
+	string first_name = 2; 
+	string last_name = 3; 
+	string email = 4;
+	string password = 5;
+}
+
+message CreateUserResponse {
+	User user = 1;
+}
