@@ -58,7 +58,8 @@ func (server *Server) setupRoute() *gin.Engine {
 	router := gin.Default()
 
 	// add Swagger route
-	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	// Ex. localhost:8080/docs/index.html
+	router.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// users routing
 	router.POST("/api/v1/users/login", server.loginUser)
