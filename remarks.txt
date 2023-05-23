@@ -371,6 +371,11 @@ Install > npm install -g @dbml/cli
 
 # Swagger
 https://www.youtube.com/watch?v=AtaXj2hj074&t=290s
+https://www.youtube.com/watch?v=AtaXj2hj074&t=10s 
+go get -u github.com/swaggo/swag/cmd/swag
+go get -u github.com/swaggo/files
+go get -u github.com/swaggo/gin-swagger
+
 
 
 

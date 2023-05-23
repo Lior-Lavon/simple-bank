@@ -1,0 +1,35 @@
+info:
+  contact: {}
+  title: Simple-Bank Service API
+paths:
+  /api/v1/users:
+    post:
+      consumes:
+      - application/json
+      description: do CreateUser
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Create user
+      tags:
+      - users
+  /api/v1/users/$username:
+    get:
+      consumes:
+      - application/json
+      description: do GetUser
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Get user
+      tags:
+      - users
+swagger: "2.0"
