@@ -42,6 +42,15 @@ func newUserResponse(user db.User) userResponse {
 	}
 }
 
+// PingExample godoc
+// @Summary Create user
+// @Schemes
+// @Description do CreateUser
+// @Tags users
+// @Accept json
+// @Produce json
+// @Success 200 {string} json
+// @Router /api/v1/users [post]
 func (s *Server) createUser(ctx *gin.Context) {
 	var request createUserParam
 	err := ctx.ShouldBindJSON(&request)
@@ -84,6 +93,15 @@ func (s *Server) createUser(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
+// PingExample godoc
+// @Summary Get user
+// @Schemes
+// @Description do GetUser
+// @Tags users
+// @Accept json
+// @Produce json
+// @Success 200 {string} json
+// @Router /api/v1/users/$username [get]
 func (s *Server) getUser(ctx *gin.Context) {
 
 	var request struct {

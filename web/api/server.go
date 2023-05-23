@@ -9,6 +9,11 @@ import (
 	db "github.com/liorlavon/simplebank/db/sqlc"
 	"github.com/liorlavon/simplebank/token"
 	"github.com/liorlavon/simplebank/util"
+
+	// gin-swagger middleware
+	_ "github.com/liorlavon/simplebank/docs"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 // Server struct
@@ -51,6 +56,10 @@ func NewServer(config util.Config, store db.Store) (*Server, error) {
 
 func (server *Server) setupRoute() *gin.Engine {
 	router := gin.Default()
+
+	// add Swagger route
+	// Ex. localhost:8080/docs/index.html
+	router.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// users routing
 	router.POST("/api/v1/users/login", server.loginUser)

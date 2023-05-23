@@ -14,7 +14,7 @@ import (
 
 const createSession = `-- name: CreateSession :one
 INSERT INTO sessions (
-  id, 
+  id,                  
   username,
   refresh_token,
   user_agent, 
@@ -27,7 +27,7 @@ INSERT INTO sessions (
 `
 
 type CreateSessionParams struct {
-	ID           uuid.UUID `json:"id"` 
+	ID           uuid.UUID `json:"id"`
 	Username     string    `json:"username"`
 	RefreshToken string    `json:"refresh_token"`
 	UserAgent    string    `json:"user_agent"`

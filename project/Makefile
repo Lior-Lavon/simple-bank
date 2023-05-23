@@ -58,6 +58,11 @@ proto:
 evans:
 	evans --host localhost --port 9090 -r repl
 
+swag:
+	cd ../ && \
+	swag init
+
+
 MAIN_BINARY=mainApp
 
 ## up: starts all containers in the background without forcing build
