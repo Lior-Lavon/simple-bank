@@ -18,6 +18,7 @@ import (
 	"github.com/liorlavon/simplebank/web/api"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 var (
@@ -45,13 +46,12 @@ func main() {
 	store := db.NewStore(conn)
 
 	// start http server
-	runGinServer(config, store)
+	//runGinServer(config, store)
 
 	// start the http gateway server
 	go runGatewayServer(config, store)
-
 	// start gRPC server
-	// runGrpcServer(config, store)
+	runGrpcServer(config, store)
 
 }
 
@@ -92,7 +92,17 @@ func runGatewayServer(config util.Config, store db.Store) {
 		return
 	}
 
-	grpcMux := runtime.NewServeMux()
+	// enable snake case for the gRPC gateway serverset configuration to use the json naming format
+	jsonOption := runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
+		MarshalOptions: protojson.MarshalOptions{
+			UseProtoNames: true,
+		},
+		UnmarshalOptions: protojson.UnmarshalOptions{
+			DiscardUnknown: true,
+		},
+	})
+
+	grpcMux := runtime.NewServeMux(jsonOption)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // this will be executed before this run gateway function, to prevent the system of doing unnececery work
 
