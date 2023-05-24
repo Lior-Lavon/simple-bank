@@ -88,10 +88,10 @@
         "username": {
           "type": "string"
         },
-        "firstName": {
+        "firstname": {
           "type": "string"
         },
-        "lastName": {
+        "lastname": {
           "type": "string"
         },
         "email": {
@@ -152,10 +152,10 @@
         "username": {
           "type": "string"
         },
-        "firstName": {
+        "firstname": {
           "type": "string"
         },
-        "lastName": {
+        "lastname": {
           "type": "string"
         },
         "email": {
