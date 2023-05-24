@@ -2,7 +2,6 @@ package validation
 
 import (
 	"fmt"
-	"log"
 	"net/mail"
 	"regexp"
 )
@@ -56,8 +55,6 @@ func ValidateEmailAddress(value string) error {
 
 func ValidateFullName(firstName string, lastName string) error {
 	value := firstName + "_" + lastName
-
-	log.Println("value : ", value)
 
 	// check lenght
 	if err := ValidateString(value, 3, 100); err != nil {

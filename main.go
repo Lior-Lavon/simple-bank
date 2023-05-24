@@ -9,6 +9,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	_ "github.com/lib/pq" // postgres drive
 	db "github.com/liorlavon/simplebank/db/sqlc"
@@ -35,13 +38,16 @@ func main() {
 		return
 	}
 
-	//printConfig(config)
+	printConfig(config)
 
 	conn, err := connectToDB(config.DBDriver, config.DBSource)
 	if err != nil {
 		log.Fatal("cannot connect to db: ", err)
 		return
 	}
+
+	// run db migration here using https://github.com/golang-migrate/migrate
+	runDBMigration(config.MIGRATION_URL, config.DBSource)
 
 	store := db.NewStore(conn)
 
@@ -53,6 +59,22 @@ func main() {
 	// start gRPC server
 	runGrpcServer(config, store)
 
+}
+
+// run db migration after loading the configuration
+func runDBMigration(migrationURL string, dbSource string) {
+	migration, err := migrate.New(migrationURL, dbSource)
+	if err != nil {
+		log.Fatal("cannot create new migrate instance : ", err)
+	}
+
+	if err = migration.Up(); err != nil {
+		if err != migrate.ErrNoChange {
+			log.Fatal("failed to run migrate up :", err)
+		}
+	}
+
+	log.Println("db migrated succesfully")
 }
 
 // Grpc Server
@@ -174,6 +196,7 @@ func printConfig(config util.Config) {
 
 	log.Printf("DB_DRIVER: %s\n", config.DBDriver)
 	log.Printf("DB_SOURCE: %s\n", config.DBSource)
+	log.Printf("MIGRATION_URL: %s\n", config.MIGRATION_URL)
 	log.Printf("HTTP_SERVER_ADDRESS: %s\n", config.HTTPServerAddress)
 	log.Printf("GRPC_SERVER_ADDRESS: %s\n", config.GRPCServerAddress)
 	log.Printf("TOKEN_SYMMETRIC_KEY: %s\n", config.TokenSymmetricKey)
