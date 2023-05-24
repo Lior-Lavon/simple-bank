@@ -2,7 +2,6 @@ package gapi
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/lib/pq"
 	db "github.com/liorlavon/simplebank/db/sqlc"
@@ -54,14 +53,6 @@ func (server *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest)
 }
 
 func validateCreateUserRequest(req *pb.CreateUserRequest) (violations []*errdetails.BadRequest_FieldViolation) {
-
-	fmt.Println("-----------")
-	fmt.Println("Username : ", req.Username)
-	fmt.Println("FirstName : ", req.GetFirstname())
-	fmt.Println("LastName : ", req.GetLastname())
-	fmt.Println("Email : ", req.Email)
-	fmt.Println("Password : ", req.Password)
-	fmt.Println("-----------")
 
 	if err := validation.ValidateUserName(req.GetUsername()); err != nil {
 		violations = append(violations, fieldViolation("username", err))
