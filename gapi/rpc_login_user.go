@@ -7,15 +7,22 @@ import (
 	db "github.com/liorlavon/simplebank/db/sqlc"
 	"github.com/liorlavon/simplebank/pb"
 	"github.com/liorlavon/simplebank/util"
+	"github.com/liorlavon/simplebank/validation"
+	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func (server *Server) LoginUser(ctx context.Context, request *pb.LoginUserRequest) (*pb.LoginUserResponse, error) {
+func (server *Server) LoginUser(ctx context.Context, req *pb.LoginUserRequest) (*pb.LoginUserResponse, error) {
+
+	violations := validateLoginUserRequest(req)
+	if violations != nil {
+		return nil, invalidArgumentError(violations)
+	}
 
 	// get the user
-	user, err := server.store.GetUser(ctx, request.Username)
+	user, err := server.store.GetUser(ctx, req.Username)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, status.Errorf(codes.NotFound, "user not found")
@@ -24,18 +31,18 @@ func (server *Server) LoginUser(ctx context.Context, request *pb.LoginUserReques
 	}
 
 	// verify password
-	err = util.CheckPassword(request.Password, user.HashedPassword)
+	err = util.CheckPassword(req.Password, user.HashedPassword)
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, "incorrect password")
 	}
 
 	// create authentication PASETO token
-	accessToken, accessPayload, err := server.tokenMaker.CreateToken(request.Username, server.config.AccessTokenDuration)
+	accessToken, accessPayload, err := server.tokenMaker.CreateToken(req.Username, server.config.AccessTokenDuration)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to create access token")
 	}
 
-	refreshToken, refreshPayload, err := server.tokenMaker.CreateToken(request.Username, server.config.RefreshTokenDuration)
+	refreshToken, refreshPayload, err := server.tokenMaker.CreateToken(req.Username, server.config.RefreshTokenDuration)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to create refresh token")
 	}
@@ -44,7 +51,7 @@ func (server *Server) LoginUser(ctx context.Context, request *pb.LoginUserReques
 
 	createSessionParams := db.CreateSessionParams{
 		ID:           refreshPayload.ID,
-		Username:     request.Username,
+		Username:     req.Username,
 		RefreshToken: refreshToken,
 		UserAgent:    mtdt.UserAgent,
 		ClientIp:     mtdt.ClientIP,
@@ -67,4 +74,14 @@ func (server *Server) LoginUser(ctx context.Context, request *pb.LoginUserReques
 	}
 
 	return rsp, nil
+}
+
+func validateLoginUserRequest(req *pb.LoginUserRequest) (violations []*errdetails.BadRequest_FieldViolation) {
+	if err := validation.ValidateUserName(req.GetUsername()); err != nil {
+		violations = append(violations, fieldViolation("username", err))
+	}
+	if err := validation.ValidatePassword(req.GetPassword()); err != nil {
+		violations = append(violations, fieldViolation("password", err))
+	}
+	return
 }
