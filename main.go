@@ -1,12 +1,15 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
 	"net"
+	"net/http"
 	"time"
 
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	_ "github.com/lib/pq" // postgres drive
 	db "github.com/liorlavon/simplebank/db/sqlc"
 	"github.com/liorlavon/simplebank/gapi"
@@ -15,6 +18,7 @@ import (
 	"github.com/liorlavon/simplebank/web/api"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 var (
@@ -31,7 +35,7 @@ func main() {
 		return
 	}
 
-	printConfig(config)
+	//printConfig(config)
 
 	conn, err := connectToDB(config.DBDriver, config.DBSource)
 	if err != nil {
@@ -42,10 +46,12 @@ func main() {
 	store := db.NewStore(conn)
 
 	// start http server
-	runGinServer(config, store)
+	//runGinServer(config, store)
 
+	// start the http gateway server
+	go runGatewayServer(config, store)
 	// start gRPC server
-	// runGrpcServer(config, store)
+	runGrpcServer(config, store)
 
 }
 
@@ -73,6 +79,56 @@ func runGrpcServer(config util.Config, store db.Store) {
 	err = grpcServer.Serve(listener)
 	if err != nil {
 		log.Fatal("cannot start gRPC server: ", err)
+		return
+	}
+}
+
+// Grpc Server
+func runGatewayServer(config util.Config, store db.Store) {
+	// out own implementation of gRPC
+	server, err := gapi.NewServer(config, store)
+	if err != nil {
+		log.Fatal("cannot create server: ", err)
+		return
+	}
+
+	// enable snake case for the gRPC gateway serverset configuration to use the json naming format
+	jsonOption := runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
+		MarshalOptions: protojson.MarshalOptions{
+			UseProtoNames: true,
+		},
+		UnmarshalOptions: protojson.UnmarshalOptions{
+			DiscardUnknown: true,
+		},
+	})
+
+	grpcMux := runtime.NewServeMux(jsonOption)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() // this will be executed before this run gateway function, to prevent the system of doing unnececery work
+
+	err = pb.RegisterSimpleBankHandlerServer(ctx, grpcMux, server)
+	if err != nil {
+		log.Fatal("cannot register handler server: ", err)
+	}
+
+	// this mux will receive http request from clients
+	mux := http.NewServeMux()
+	// to convert them to grpc format, we will reroute them to the grpc mux we created before
+	mux.Handle("/", grpcMux)
+
+	// start the server to listen to gRPC on a specific port
+	//listener, err := net.Listen("tcp", config.GRPCServerAddress)
+	listener, err := net.Listen("tcp", config.HTTPServerAddress)
+	if err != nil {
+		log.Fatal("cannot create gRPC listener: ", err)
+		return
+	}
+
+	log.Printf("Start http gateway server at %s", listener.Addr().String())
+	//err = grpcServer.Serve(listener)
+	err = http.Serve(listener, mux)
+	if err != nil {
+		log.Fatal("cannot start http gateway server: ", err)
 		return
 	}
 }
@@ -115,6 +171,7 @@ func connectToDB(driverName, dataSourceName string) (*sql.DB, error) {
 }
 
 func printConfig(config util.Config) {
+
 	log.Printf("DB_DRIVER: %s\n", config.DBDriver)
 	log.Printf("DB_SOURCE: %s\n", config.DBSource)
 	log.Printf("HTTP_SERVER_ADDRESS: %s\n", config.HTTPServerAddress)
