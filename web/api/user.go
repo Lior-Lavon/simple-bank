@@ -185,9 +185,9 @@ func (s *Server) updateUser(ctx *gin.Context) {
 
 	arg := db.UpdateUserParams{
 		Username:  request.Username,
-		Firstname: body.Firstname,
-		Lastname:  body.Lastname,
-		Email:     body.Email,
+		Firstname: sql.NullString{String: body.Firstname, Valid: true},
+		Lastname:  sql.NullString{String: body.Lastname, Valid: true},
+		Email:     sql.NullString{String: body.Email, Valid: true},
 	}
 
 	user, err := s.store.UpdateUser(ctx, arg)
