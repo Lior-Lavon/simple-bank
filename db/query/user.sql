@@ -22,10 +22,11 @@ OFFSET $2;
 -- name: UpdateUser :one
 UPDATE users
   set 
-  firstname = $2, 
-  lastname = $3, 
-  email = $4
-WHERE username = $1
+    hashed_password = COALESCE(sqlc.narg(hashed_password), hashed_password),
+    firstname = COALESCE(sqlc.narg(firstname), firstname),    
+    lastname = COALESCE(sqlc.narg(lastname), lastname),    
+    email = COALESCE(sqlc.narg(email), email)   
+WHERE username = sqlc.arg(username)
 RETURNING *;
 
 -- name: DeleteUser :exec

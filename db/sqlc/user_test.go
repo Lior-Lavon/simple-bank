@@ -66,26 +66,112 @@ func TestGetUser(t *testing.T) {
 	assert.WithinDuration(t, u.CreatedAt, user.CreatedAt, time.Second)
 }
 
-func TestUpdateUser(t *testing.T) {
-	u := createRandomUser(t)
+func TestUpdateUserFirstName(t *testing.T) {
+	oldUser := createRandomUser(t)
 
-	arg := UpdateUserParams{
-		Username:  u.Username,
-		Firstname: util.RandomUser(),
-		Lastname:  util.RandomUser(),
-		Email:     util.RandEmail(),
-	}
+	newFirstName := util.RandomUser()
 
-	user, err := testQueriers.UpdateUser(context.Background(), arg)
-	assert.NoError(t, err)
-	assert.NotEmpty(t, user)
+	updatedUser, err := testQueriers.UpdateUser(context.Background(), UpdateUserParams{
+		Username:  oldUser.Username,
+		Firstname: sql.NullString{String: newFirstName, Valid: true},
+	})
 
-	// check values
-	assert.Equal(t, arg.Username, user.Username)
-	assert.Equal(t, arg.Firstname, user.Firstname)
-	assert.Equal(t, arg.Lastname, user.Lastname)
-	assert.Equal(t, arg.Email, user.Email)
-	assert.WithinDuration(t, u.CreatedAt, user.CreatedAt, time.Second)
+	require.NoError(t, err)
+
+	// check value change
+	require.NotEqual(t, updatedUser.Firstname, oldUser.Firstname)
+	require.Equal(t, newFirstName, updatedUser.Firstname)
+
+	// hceck no change
+	require.Equal(t, oldUser.HashedPassword, updatedUser.HashedPassword)
+	require.Equal(t, oldUser.Lastname, updatedUser.Lastname)
+	require.Equal(t, oldUser.Email, updatedUser.Email)
+	require.WithinDuration(t, oldUser.PasswordChangedAt, updatedUser.PasswordChangedAt, time.Second)
+	require.WithinDuration(t, oldUser.CreatedAt, updatedUser.CreatedAt, time.Second)
+}
+
+func TestUpdateUserEmail(t *testing.T) {
+	oldUser := createRandomUser(t)
+
+	newEmail := util.RandEmail()
+
+	updatedUser, err := testQueriers.UpdateUser(context.Background(), UpdateUserParams{
+		Username: oldUser.Username,
+		Email:    sql.NullString{String: newEmail, Valid: true},
+	})
+
+	require.NoError(t, err)
+
+	// check value change
+	require.NotEqual(t, updatedUser.Email, oldUser.Email)
+	require.Equal(t, newEmail, updatedUser.Email)
+
+	// hceck no change
+	require.Equal(t, oldUser.HashedPassword, updatedUser.HashedPassword)
+	require.Equal(t, oldUser.Firstname, updatedUser.Firstname)
+	require.Equal(t, oldUser.Lastname, updatedUser.Lastname)
+	require.WithinDuration(t, oldUser.PasswordChangedAt, updatedUser.PasswordChangedAt, time.Second)
+	require.WithinDuration(t, oldUser.CreatedAt, updatedUser.CreatedAt, time.Second)
+}
+
+func TestUpdateUserPassword(t *testing.T) {
+	oldUser := createRandomUser(t)
+
+	newHashedPassword, err := util.HashPassword("new_secret")
+	require.NoError(t, err)
+
+	updatedUser, err := testQueriers.UpdateUser(context.Background(), UpdateUserParams{
+		Username:       oldUser.Username,
+		HashedPassword: sql.NullString{String: newHashedPassword, Valid: true},
+	})
+
+	require.NoError(t, err)
+
+	// check value change
+	require.NotEqual(t, updatedUser.HashedPassword, oldUser.HashedPassword)
+	require.Equal(t, newHashedPassword, updatedUser.HashedPassword)
+
+	// hceck no change
+	require.Equal(t, oldUser.Firstname, updatedUser.Firstname)
+	require.Equal(t, oldUser.Lastname, updatedUser.Lastname)
+	require.Equal(t, oldUser.Email, updatedUser.Email)
+	require.WithinDuration(t, oldUser.PasswordChangedAt, updatedUser.PasswordChangedAt, time.Second)
+	require.WithinDuration(t, oldUser.CreatedAt, updatedUser.CreatedAt, time.Second)
+}
+
+func TestUpdateUserAllFields(t *testing.T) {
+	oldUser := createRandomUser(t)
+
+	newFirstName := util.RandomUser()
+	newEmail := util.RandEmail()
+	newHashedPassword, err := util.HashPassword("new_secret")
+	require.NoError(t, err)
+
+	updatedUser, err := testQueriers.UpdateUser(context.Background(), UpdateUserParams{
+		Username:       oldUser.Username,
+		Firstname:      sql.NullString{String: newFirstName, Valid: true},
+		Email:          sql.NullString{String: newEmail, Valid: true},
+		HashedPassword: sql.NullString{String: newHashedPassword, Valid: true},
+	})
+
+	require.NoError(t, err)
+
+	// check value change
+	require.NotEqual(t, updatedUser.Firstname, oldUser.Firstname)
+	require.Equal(t, newFirstName, updatedUser.Firstname)
+
+	// check value change
+	require.NotEqual(t, updatedUser.Email, oldUser.Email)
+	require.Equal(t, newEmail, updatedUser.Email)
+
+	// check value change
+	require.NotEqual(t, updatedUser.HashedPassword, oldUser.HashedPassword)
+	require.Equal(t, newHashedPassword, updatedUser.HashedPassword)
+
+	// hceck no change
+	require.Equal(t, oldUser.Lastname, updatedUser.Lastname)
+	require.WithinDuration(t, oldUser.PasswordChangedAt, updatedUser.PasswordChangedAt, time.Second)
+	require.WithinDuration(t, oldUser.CreatedAt, updatedUser.CreatedAt, time.Second)
 }
 
 func TestDeleteUser(t *testing.T) {
