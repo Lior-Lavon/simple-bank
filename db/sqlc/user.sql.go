@@ -130,17 +130,19 @@ UPDATE users
     hashed_password = COALESCE($1, hashed_password),
     firstname = COALESCE($2, firstname),    
     lastname = COALESCE($3, lastname),    
-    email = COALESCE($4, email)   
-WHERE username = $5
+    email = COALESCE($4, email),
+    password_changed_at = COALESCE($5, password_changed_at)
+WHERE username = $6
 RETURNING username, hashed_password, firstname, lastname, email, password_changed_at, created_at
 `
 
 type UpdateUserParams struct {
-	HashedPassword sql.NullString `json:"hashed_password"`
-	Firstname      sql.NullString `json:"firstname"`
-	Lastname       sql.NullString `json:"lastname"`
-	Email          sql.NullString `json:"email"`
-	Username       string         `json:"username"`
+	HashedPassword    sql.NullString `json:"hashed_password"`
+	Firstname         sql.NullString `json:"firstname"`
+	Lastname          sql.NullString `json:"lastname"`
+	Email             sql.NullString `json:"email"`
+	PasswordChangedAt sql.NullTime   `json:"password_changed_at"`
+	Username          string         `json:"username"`
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error) {
@@ -149,6 +151,7 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		arg.Firstname,
 		arg.Lastname,
 		arg.Email,
+		arg.PasswordChangedAt,
 		arg.Username,
 	)
 	var i User

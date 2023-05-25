@@ -1,0 +1,25 @@
+// we will use protobuf v3 to define messages
+syntax = "proto3";
+
+package pb;
+
+import "user.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/liorlavon/simplebank/pb";
+// the generated code will go into the /pb folder
+
+// here we define the response and data stracture of the API
+
+message UpdateUserRequest { 
+	string username = 1;
+	optional string firstname = 2; 
+	optional string lastname = 3; 
+	optional string email = 4;
+	optional string password = 5;
+	optional google.protobuf.Timestamp password_changed_at = 6;
+}
+
+message UpdateUserResponse {
+	User user = 1;
+}

@@ -7,8 +7,8 @@ import (
 )
 
 var (
-	isValidUserName = regexp.MustCompile(`^[a-z0-9_]+$`).MatchString // define regular expresion using 0-9, a-z, _ and each character can have multiple times
-	isValidFullName = regexp.MustCompile(`^[a-zA-Z_]+$`).MatchString // define regular expresion using a-z, [space - \\s] and each character can have multiple times
+	isValidUserName = regexp.MustCompile(`^[a-z0-9_]+$`).MatchString  // define regular expresion using 0-9, a-z, _ and each character can have multiple times
+	isValidFullName = regexp.MustCompile(`^[a-zA-Z\s]+$`).MatchString // define regular expresion using a-z, [space - \\s] and each character can have multiple times
 )
 
 // validate string length
@@ -54,7 +54,7 @@ func ValidateEmailAddress(value string) error {
 }
 
 func ValidateFullName(firstName string, lastName string) error {
-	value := firstName + "_" + lastName
+	value := firstName + " " + lastName
 
 	// check lenght
 	if err := ValidateString(value, 3, 100); err != nil {
