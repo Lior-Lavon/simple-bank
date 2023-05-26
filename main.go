@@ -52,7 +52,7 @@ func main() {
 	store := db.NewStore(conn)
 
 	// start http server
-	//runGinServer(config, store)
+	// runGinServer(config, store)
 
 	// start the http gateway server
 	go runGatewayServer(config, store)
