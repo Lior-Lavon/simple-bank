@@ -8,11 +8,18 @@ import "google/api/annotations.proto";
 import "rpc_create_user.proto";
 import "rpc_update_user.proto";
 import "rpc_login_user.proto";
+import "rpc_get_user.proto";
 
 option go_package = "github.com/liorlavon/simplebank/pb";
 
 // Define gRPC API to create new user
 service SimpleBank {
+    rpc GetUser(GetUserRequest) returns (GetUserResponse){
+        option (google.api.http) = {
+            post: "/v1/get_user"
+            body: "*"
+        };
+    }
     rpc CreateUser(CreateUserRequest) returns (CreateUserResponse){
         option (google.api.http) = {
             post: "/v1/create_user"
