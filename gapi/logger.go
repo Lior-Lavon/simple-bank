@@ -2,6 +2,7 @@ package gapi
 
 import (
 	"context"
+	"net/http"
 	"time"
 
 	// used by zerolog
@@ -44,4 +45,53 @@ func GrpcLogger(
 		Msg("received a grpc request")
 
 	return result, err
+}
+
+// implement the ResponseWriter as interface and override the WriteHeader function to get the StatusCode
+type ResponseRecorder struct {
+	http.ResponseWriter
+	StatusCode int
+	Body       []byte
+}
+
+// implement ResponseWriter interface
+func (rec *ResponseRecorder) WriteHeader(statusCode int) {
+	rec.StatusCode = statusCode
+	rec.ResponseWriter.WriteHeader(statusCode) // call the original function to continue the process
+}
+
+// implement ResponseWriter interface
+func (rec *ResponseRecorder) Write(b []byte) (int, error) {
+	rec.Body = b                       // in case of an error, get it from the body
+	return rec.ResponseWriter.Write(b) // call the original function to continue the process
+}
+
+// Http Logger middleware, to be added to the gRPC Gateway server
+func HttpLoggerMiddleware(handler http.Handler) http.Handler {
+
+	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		startTime := time.Now()
+
+		// pass the request to the main handler
+		rec := &ResponseRecorder{
+			ResponseWriter: res,           // set the original ResponseWriter
+			StatusCode:     http.StatusOK, // set the default value, will be updated after the handler.ServeHTTP process
+		}
+		handler.ServeHTTP(rec, req)
+		duration := time.Since(startTime)
+
+		logger := log.Info()
+		if rec.StatusCode != http.StatusOK {
+			logger = log.Error().Bytes("body", rec.Body)
+		}
+
+		logger.Str("protocol", "http").
+			Str("method", req.Method).                           // print method PUT/GET/POST ...
+			Str("path", req.RequestURI).                         // print the full path
+			Int("status_code", rec.StatusCode).                  // print status code
+			Str("status_text", http.StatusText(rec.StatusCode)). // print the description
+			Dur("duration", duration).                           // print run duration
+			Msg("received a HTTP request")
+
+	})
 }
