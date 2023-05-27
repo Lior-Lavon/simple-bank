@@ -23,3 +23,18 @@ protobuf definision for two API'S
 VSC Plugin:
 - 'vscode-proto3' // syntax highlighting
 
+# gRPC Interceptor
+# the interceptor is getting called for every request
+# before it is sent to the gRPC handler to be processed
+
+we will implement grpc.UnaryInterceptor()
+# to write stractured logs we will use : 'zerowlog'
+https://github.com/rs/zerolog
+# It helps to write logs output format
+
+
+
+
+
+
+
