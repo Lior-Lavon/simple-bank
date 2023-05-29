@@ -2,12 +2,15 @@ package gapi
 
 import (
 	"context"
+	"time"
 
+	"github.com/hibiken/asynq"
 	"github.com/lib/pq"
 	db "github.com/liorlavon/simplebank/db/sqlc"
 	"github.com/liorlavon/simplebank/pb"
 	"github.com/liorlavon/simplebank/util"
 	"github.com/liorlavon/simplebank/validation"
+	"github.com/liorlavon/simplebank/worker"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -25,15 +28,31 @@ func (server *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest)
 		return nil, status.Errorf(codes.Internal, "failed to Hash password %s", err)
 	}
 
-	arg := db.CreateUserParams{
-		Username:       req.GetUsername(),
-		HashedPassword: hashedPassword,
-		Firstname:      req.GetFirstname(),
-		Lastname:       req.GetLastname(),
-		Email:          req.GetEmail(),
+	arg := db.CreateUserTxParams{
+		CreateUserParams: db.CreateUserParams{
+			Username:       req.GetUsername(),
+			HashedPassword: hashedPassword,
+			Firstname:      req.GetFirstname(),
+			Lastname:       req.GetLastname(),
+			Email:          req.GetEmail(),
+		},
+		AfterCreate: func(user db.User) error {
+			// send a verification email to the user
+			taskPayload := &worker.PayloadSendVerifyEmail{
+				Username: req.GetUsername(),
+			}
+			// set up the attribute of the task
+			opts := []asynq.Option{
+				asynq.MaxRetry(10),                // max retry per task
+				asynq.ProcessIn(10 * time.Second), // processs after 10 seconds delay
+				asynq.Queue(worker.QueueCritical), // send the task to a critical queue
+			}
+			err = server.taskDistributor.DistributeTaskSendVerifyEmail(ctx, taskPayload, opts...)
+			return err
+		},
 	}
 
-	user, err := server.store.CreateUser(ctx, arg)
+	txResult, err := server.store.CreateUserTx(ctx, arg)
 	if err != nil {
 		// try to convert the error to a err.(*pq.Error) type
 		if pqErr, ok := err.(*pq.Error); ok {
@@ -47,7 +66,7 @@ func (server *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest)
 	}
 
 	rsp := &pb.CreateUserResponse{
-		User: convertUser(user),
+		User: convertUser(txResult.User),
 	}
 	return rsp, nil
 }
