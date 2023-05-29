@@ -63,6 +63,8 @@ swag:
 	cd ../ && \
 	swag init
 
+radis:
+	docker run --name radis -p 6379:6379 -d radis:7-alpine
 
 MAIN_BINARY=mainApp
 

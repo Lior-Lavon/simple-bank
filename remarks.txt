@@ -376,6 +376,19 @@ go get -u github.com/swaggo/swag/cmd/swag
 go get -u github.com/swaggo/files
 go get -u github.com/swaggo/gin-swagger
 
+# Setup background process using Asyncq 
+# used to push the event asynchronically
+https://github.com/hibiken/asynq
+The client 'SimpleBack' is pushing tasks to the queue using tags, then the server pickup a task and instantiate a background process
+
+
+# Redis
+- from docker hub
+docker pull redis:7-redis
+# test redis
+docker exec -it redis redis-cli ping
+
+
 
 
 
