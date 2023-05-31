@@ -5,6 +5,7 @@ import (
 
 	"github.com/hibiken/asynq"
 	db "github.com/liorlavon/simplebank/db/sqlc"
+	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -25,12 +26,16 @@ type RedisTaskProcessor struct {
 }
 
 func NewRedisTaskProcessor(redisOpt asynq.RedisConnOpt, store db.Store) iTaskProcessor {
-	server := asynq.NewServer(redisOpt, asynq.Config{
-		Queues: map[string]int{
-			QueueCritical: 10,
-			QueueDefault:  5,
-		},
-	})
+	server := asynq.NewServer(
+		redisOpt,
+		asynq.Config{
+			Queues: map[string]int{
+				QueueCritical: 10,
+				QueueDefault:  5,
+			},
+			ErrorHandler: asynq.ErrorHandlerFunc(reportError), // define error callback function
+			Logger:       NewLogger(),                         // define custome logger struct for the logger interface
+		})
 
 	return &RedisTaskProcessor{
 		server: server,
@@ -48,4 +53,15 @@ func (processor *RedisTaskProcessor) Start() error {
 
 	// start the worker server
 	return processor.server.Start(mux)
+}
+
+func reportError(ctx context.Context, task *asynq.Task, err error) {
+	// retried, _ := asynq.GetRetryCount(ctx)
+	// maxRetry, _ := asynq.GetMaxRetry(ctx)
+	// if retried >= maxRetry {
+	// 	err = fmt.Errorf("retry exhausted for task %s: %w", task.Type, err)
+	// }
+	// errorReportingService.Notify(err)
+
+	log.Error().Err(err).Str("type", task.Type()).Bytes("payload", task.Payload()).Msg("process task failed")
 }

@@ -77,7 +77,6 @@ func main() {
 	go runGatewayServer(config, store, taskDistributor)
 	// start gRPC server
 	runGrpcServer(config, store, taskDistributor)
-
 }
 
 // run db migration after loading the configuration
@@ -126,7 +125,7 @@ func runGrpcServer(config util.Config, store db.Store, taskDistributor worker.Ta
 	// start the server to listen to gRPC on a specific port
 	listener, err := net.Listen("tcp", config.GRPCServerAddress)
 	if err != nil {
-		log.Fatal().Msg("cannot create gRPC listener")
+		log.Fatal().Msg("cannot create gRPC listener 1")
 		return
 	}
 
@@ -175,7 +174,7 @@ func runGatewayServer(config util.Config, store db.Store, taskDistributor worker
 	//listener, err := net.Listen("tcp", config.GRPCServerAddress)
 	listener, err := net.Listen("tcp", config.HTTPServerAddress)
 	if err != nil {
-		log.Fatal().Msg("cannot create gRPC listener")
+		log.Fatal().Msg("cannot create gRPC listener 2")
 		return
 	}
 
