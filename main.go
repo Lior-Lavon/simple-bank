@@ -9,14 +9,11 @@ import (
 	"os"
 	"time"
 
-	"github.com/hibiken/asynq"
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
-
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/hibiken/asynq"
 	_ "github.com/lib/pq" // postgres drive
 	db "github.com/liorlavon/simplebank/db/sqlc"
 	"github.com/liorlavon/simplebank/gapi"
@@ -24,6 +21,8 @@ import (
 	"github.com/liorlavon/simplebank/util"
 	"github.com/liorlavon/simplebank/web/api"
 	"github.com/liorlavon/simplebank/worker"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/protobuf/encoding/protojson"
