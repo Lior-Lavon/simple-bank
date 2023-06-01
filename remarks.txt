@@ -390,6 +390,14 @@ docker exec -it redis redis-cli ping
 
 
 
+# Send Email
+# Package net-smpt : Simple Mail Protocol
+# https://github.com/go-gomail/gomail
+# Installation : go get github.com/jordan-wright/email
+
+
+
+
 
 
 
