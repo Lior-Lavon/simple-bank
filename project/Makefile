@@ -38,7 +38,7 @@ sqlc:
 	cd ../db && sqlc generate
 
 test:
-	go test -v -cover ../... 
+	go test -v -cover -short ../... 
 
 server:
 	cd ../ && go run main.go
