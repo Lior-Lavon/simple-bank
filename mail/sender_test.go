@@ -9,6 +9,12 @@ import (
 )
 
 func TestEmailWithGmail(t *testing.T) {
+
+	// skipping the test during build process test phase
+	if testing.Short() { // skipp this test if Short flag is set
+		t.Skip() // set the short flag in the Make file
+	}
+
 	// load the config
 	config, err := util.LoadConfig("..")
 	require.NoError(t, err)
