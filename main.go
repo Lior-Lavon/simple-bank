@@ -17,6 +17,7 @@ import (
 	_ "github.com/lib/pq" // postgres drive
 	db "github.com/liorlavon/simplebank/db/sqlc"
 	"github.com/liorlavon/simplebank/gapi"
+	"github.com/liorlavon/simplebank/mail"
 	"github.com/liorlavon/simplebank/pb"
 	"github.com/liorlavon/simplebank/util"
 	"github.com/liorlavon/simplebank/web/api"
@@ -67,7 +68,7 @@ func main() {
 		Addr: config.RedisAddress,
 	}
 	taskDistributor := worker.NewRedisTaskDistributer(redisOpt)
-	go runTaskProcessor(redisOpt, store)
+	go runTaskProcessor(config, redisOpt, store)
 
 	// start http server
 	// runGinServer(config, store)
@@ -95,8 +96,10 @@ func runDBMigration(migrationURL string, dbSource string) {
 }
 
 // background task-processor to handle Redis tasks
-func runTaskProcessor(redisOpt asynq.RedisConnOpt, store db.Store) {
-	taskProcessor := worker.NewRedisTaskProcessor(redisOpt, store)
+func runTaskProcessor(config util.Config, redisOpt asynq.RedisConnOpt, store db.Store) {
+
+	mailer := mail.NewGmailSender(config.EmailSenderName, config.EmailSenderAddress, config.EmailSenderPassword)
+	taskProcessor := worker.NewRedisTaskProcessor(redisOpt, store, mailer)
 	log.Info().Msg("start Redis task-processor")
 
 	err := taskProcessor.Start()

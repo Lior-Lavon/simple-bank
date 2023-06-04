@@ -12,7 +12,7 @@ const (
 	smtpServerAddress = "smtp.gmail.com:587"
 )
 
-type iEmailSender interface {
+type EmailSender interface {
 	SendEmail(
 		subject string,
 		content string,
@@ -29,7 +29,7 @@ type GmailSender struct {
 	fromEmailPassword string
 }
 
-func NewGmailSender(name string, fromEmailAdd string, fromEmailPass string) iEmailSender {
+func NewGmailSender(name string, fromEmailAdd string, fromEmailPass string) EmailSender {
 	return &GmailSender{
 		name:              name,
 		fromEmailAddress:  fromEmailAdd,
