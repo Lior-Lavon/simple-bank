@@ -49,6 +49,7 @@ server:
 
 mock:
 	cd ../ && mockgen -package mockdb -destination db/mock/store.go github.com/liorlavon/simplebank/db/sqlc Store 
+	cd ../ && mockgen -package mockwk -destination worker/mock/distributor.go github.com/liorlavon/simplebank/worker TaskDistributor 
 
 proto:
 	cd ../ && \
