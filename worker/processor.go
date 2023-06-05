@@ -5,6 +5,7 @@ import (
 
 	"github.com/hibiken/asynq"
 	db "github.com/liorlavon/simplebank/db/sqlc"
+	"github.com/liorlavon/simplebank/mail"
 	"github.com/rs/zerolog/log"
 )
 
@@ -22,10 +23,11 @@ type iTaskProcessor interface {
 // RedisTaskProcessor will implement the iTaskProcessor interface
 type RedisTaskProcessor struct {
 	server *asynq.Server
-	store  db.Store // allow the processor to access the db
+	store  db.Store         // allow the processor to access the db
+	mailer mail.EmailSender // mailer interface
 }
 
-func NewRedisTaskProcessor(redisOpt asynq.RedisConnOpt, store db.Store) iTaskProcessor {
+func NewRedisTaskProcessor(redisOpt asynq.RedisConnOpt, store db.Store, mailer mail.EmailSender) iTaskProcessor {
 	server := asynq.NewServer(
 		redisOpt,
 		asynq.Config{
@@ -40,6 +42,7 @@ func NewRedisTaskProcessor(redisOpt asynq.RedisConnOpt, store db.Store) iTaskPro
 	return &RedisTaskProcessor{
 		server: server,
 		store:  store,
+		mailer: mailer,
 	}
 }
 

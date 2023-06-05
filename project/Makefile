@@ -10,6 +10,10 @@ createdb:
 dropdb:
 	docker exec -it postgres12 dropdb simple_bank
 
+new_migration:
+	migrate create -ext sql -dir ../db/migration -seq $(name)
+# make new_migration name=<value>
+
 migrateup:
 	migrate -path ../db/migration -database "$(LOCAL_DB_URL)" -verbose up
 
