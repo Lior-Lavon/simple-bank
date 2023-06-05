@@ -7,13 +7,13 @@ INSERT INTO verify_emails (
   $1, $2, $3
 ) RETURNING *;
 
--- name: GetVerifyEmail :one
-SELECT * FROM verify_emails
-WHERE id = $1 LIMIT 1;
-
 -- name: UpdateVerifyEmail :one
 UPDATE verify_emails
   set 
-  is_used = $2
-WHERE id = $1
+  is_used = TRUE
+WHERE 
+  id = $1 
+  AND secret_code = @secret_code 
+  AND is_used = FALSE 
+  AND expired_at > now()  
 RETURNING *;

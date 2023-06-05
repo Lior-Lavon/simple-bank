@@ -7,8 +7,9 @@ import (
 )
 
 var (
-	isValidUserName = regexp.MustCompile(`^[a-z0-9_]+$`).MatchString  // define regular expresion using 0-9, a-z, _ and each character can have multiple times
-	isValidFullName = regexp.MustCompile(`^[a-zA-Z\s]+$`).MatchString // define regular expresion using a-z, [space - \\s] and each character can have multiple times
+	isValidUserName        = regexp.MustCompile(`^[a-z0-9_]+$`).MatchString  // define regular expresion using 0-9, a-z, _ and each character can have multiple times
+	isValidFullName        = regexp.MustCompile(`^[a-zA-Z\s]+$`).MatchString // define regular expresion using a-z, [space - \\s] and each character can have multiple times
+	isValidLowerCaseString = regexp.MustCompile(`^[a-z_]+$`).MatchString     // define regular expresion using a-z, _ and each character can have multiple times
 )
 
 // validate string length
@@ -64,6 +65,29 @@ func ValidateFullName(firstName string, lastName string) error {
 	// check using regular expressions
 	if !isValidFullName(value) {
 		return fmt.Errorf("must contain only letters or spaces")
+	}
+
+	return nil
+}
+
+func ValidateEmailId(value int64) error {
+	// check lenght
+	if value <= 0 {
+		return fmt.Errorf("must be a positive integer")
+	}
+
+	return nil
+}
+
+func ValidateSecretCode(value string) error {
+	// check lenght
+	if err := ValidateString(value, 32, 128); err != nil {
+		return err
+	}
+
+	// check using regular expressions
+	if !isValidLowerCaseString(value) {
+		return fmt.Errorf("must contain only lower case letters")
 	}
 
 	return nil
