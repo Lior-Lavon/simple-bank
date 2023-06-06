@@ -20,11 +20,13 @@ import (
 
 func (server *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.CreateUserResponse, error) {
 
+	// validate input
 	violations := validateCreateUserRequest(req)
 	if violations != nil {
 		return nil, invalidArgumentError(violations)
 	}
 
+	// hash the password
 	hashedPassword, err := util.HashPassword(req.GetPassword())
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to Hash password %s", err)
@@ -38,6 +40,7 @@ func (server *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest)
 			Lastname:       req.GetLastname(),
 			Email:          req.GetEmail(),
 		},
+		// implement this function after the create user success
 		AfterCreate: func(user db.User) error {
 			// send a verification email to the user
 			taskPayload := &worker.PayloadSendVerifyEmail{
@@ -54,6 +57,7 @@ func (server *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest)
 		},
 	}
 
+	// start a create user transaction
 	txResult, err := server.store.CreateUserTx(ctx, arg)
 	if err != nil {
 		// try to convert the error to a err.(*pq.Error) type
