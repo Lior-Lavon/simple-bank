@@ -87,7 +87,7 @@ https://github.com/kyleconroy/sqlc
 // Http testing using Mock-DB
 // https://github.com/golang/mock
 // Install : go install github.com/golang/mock/mockgen@v1.6.0
->  ls -l ~/go/bin
+>  ls -l ~/go/bin // location of mockDB
 >  which mockgen -> result with 'mockgen not found' becouse 
 // create  new folder in db/mock
 // check 'mockgen help' and choose 'Reflect mode'

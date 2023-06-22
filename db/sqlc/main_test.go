@@ -30,7 +30,6 @@ func TestMain(m *testing.M) {
 
 	testQueriers = New(testDB) // from db.go file
 
-	code := m.Run() // Run runs the tests. It returns an exit code to pass to os.Exit.
-
-	os.Exit(code) // start running the unit-test
+	// Run runs the tests. It returns an exit code to pass to os.Exit.
+	os.Exit(m.Run()) // start running the unit-test
 }
